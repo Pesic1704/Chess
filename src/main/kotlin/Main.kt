@@ -1,25 +1,385 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.*
+import androidx.compose.ui.window.*
+import androidx.compose.material3.*
 
-@Composable
-@Preview
-fun App() {
+fun main() = application{
 
+    val game = Game()
+    game.init()
 
-
+    Window(onCloseRequest = ::exitApplication, title = "Chess")
+    {
+        App(game)
+    }
 }
 
-fun main() = application {
-    Window(onCloseRequest = ::exitApplication) {
-        App()
+@Composable
+fun App(game: Game) {
+
+    val hScroll = rememberScrollState()
+    val vScroll = rememberScrollState()
+
+    val commonTextStyle = TextStyle(
+        fontSize = 24.sp,
+        fontWeight = FontWeight.Medium,
+        letterSpacing = 1.sp,
+        color = Color.Black
+    )
+
+    Column(
+        modifier = Modifier.fillMaxSize()
+    )
+    {
+
+        // TOP LABELS
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFB58863))
+        )
+        {
+            // TODO TIMER
+
+            topBarItems()
+        }
+
+        // MAIN AREA
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.LightGray),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        )
+        {
+
+            Column(
+                modifier = Modifier
+                    .background(Color(0xFFB58863))
+                    .wrapContentWidth()
+                    .fillMaxHeight(1f)
+                    .padding(10.dp)
+            )
+            {
+                Text(
+                    text = "Match history",
+                    style = commonTextStyle
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .weight(1f, fill = false)
+                )
+                {
+                    // TODO HYSTORY
+                }
+            }
+
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            )
+            {
+
+                Column{
+                    Text(
+                        "White captures",
+                        style = commonTextStyle
+                    )
+
+                    // TODO WHITE_CAPTURED
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column {
+                    gameGameInfoText()
+
+                    Box(
+                        modifier = Modifier
+                            .horizontalScroll(hScroll)
+                            .verticalScroll(vScroll)
+                    )
+                    {
+                        ChessBoard(
+                            game=game,
+                            onSquareClick = { row, col -> game.onSquareClick(row, col) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column {
+                    Text(
+                        "Black captures",
+                        style = commonTextStyle
+                    )
+
+                    // TODO BLACK_CAPTURED
+                }
+            }
+
+            //  TODO promotionSquare check
+            if(false)
+            {
+                promotionDialog()
+            }
+        }
+    }
+}
+
+@Composable
+fun ChessBoard(
+    game: Game,
+    onSquareClick: (row: Int, col: Int) -> Unit
+) {
+    val lightSquare = Color(0xFFF0D9B5)
+    val darkSquare = Color(0xFFB58863)
+
+    Row(
+        modifier = Modifier.padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        // left numbers
+        Column {
+            for (row in 0..7) {
+                Box(
+                    modifier = Modifier.size(36.dp, 96.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("${8 - row}", fontSize = 24.sp)
+                }
+            }
+        }
+
+        Column {
+            Box(
+                modifier = Modifier
+                    .border(4.dp, Color(0xFF5C4033), RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF5C4033))
+                    .padding(8.dp)
+            ) {
+
+                Column {
+                    for (row in 0..7) {
+                        Row {
+                            for (col in 0..7) {
+
+                                val piece = game.board.grid[row][col]
+                                val isWhiteSquare = (row + col) % 2 == 0
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(96.dp)
+                                        .background(if (isWhiteSquare) lightSquare else darkSquare)
+                                        .clickable { onSquareClick(row, col) },
+                                    contentAlignment = Alignment.Center
+                                ) {
+
+                                    if (piece != null) {
+                                        Text(
+                                            text = piece.type.getSymbol(),
+                                            fontSize = 64.sp,
+                                            modifier = Modifier.scale(1.4f),
+                                            color = if (piece.player == Player.WHITE)
+                                                Color.White
+                                            else Color.Black
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // bottom letters
+            Row {
+                for (c in 'a'..'h') {
+                    Box(
+                        modifier = Modifier.size(96.dp, 36.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("$c", fontSize = 24.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun topBarItems()
+{
+    //TODO
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF4A2F1A))
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        TimerBox(
+            //TODO
+            label = "White",
+            minutes = 0,
+            seconds = 0,
+            background = Color.DarkGray,
+            textColor = Color.White
+        )
+
+        Row {
+            styledButton("RESTART GAME") {
+                // TODO empty function
+            }
+
+            styledButton("RESIGN") {
+                // TODO empty function
+            }
+        }
+
+        TimerBox(
+            //TODO
+            label = "Black",
+            minutes = 0,
+            seconds = 0,
+            background = Color(0xFFB58863),
+            textColor = Color.White
+        )
+    }
+}
+
+@Composable
+fun TimerBox(
+    label: String,
+    minutes: Int,
+    seconds: Int,
+    background: Color,
+    textColor: Color
+)
+{
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .background(background, RoundedCornerShape(10.dp))
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = textColor.copy(alpha = 0.8f)
+        )
+
+        Text(
+            text = String.format("%02d:%02d", minutes, seconds),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = textColor
+        )
+    }
+}
+
+@Composable
+fun styledButton(
+    label: String,
+    onClick: () -> Unit
+)
+{
+    Button(
+        modifier = Modifier
+            .padding(8.dp)
+            .height(48.dp),
+        onClick = { onClick() },
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFF31302E),
+            contentColor = Color.White
+        )
+    ) {
+        Text(
+            text = label,
+            style = TextStyle(
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 1.sp
+            )
+        )
+    }
+}
+
+@Composable
+fun promotionDialog()
+{
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        )
+    )
+    {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 8.dp,
+            modifier = Modifier
+                .padding(16.dp)
+                .wrapContentSize()
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    "Pawn Promotion",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.Black
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // TODO PROMOTION
+
+            }
+        }
+    }
+}
+
+@Composable
+fun gameGameInfoText()
+{
+    Row {
+        Text(
+
+            //TODO LABEL
+
+            text = "White to move",
+            style = MaterialTheme.typography.headlineMedium
+        )
     }
 }
