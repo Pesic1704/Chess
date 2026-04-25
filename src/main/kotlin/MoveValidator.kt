@@ -82,4 +82,17 @@ class MoveValidator(private val board: Board)
 
         return MoveResult(moves.toList(),captures.toList())
     }
+    fun getQueenMoves( row: Int, col: Int): MoveResult
+    {
+        val moves = mutableListOf<Pair<Pair<Int, Int>, Int>>()
+        val captures = mutableListOf<Pair<Int, Int>> ()
+
+        moves.addAll(getRookMoves(row, col).moves)
+        captures.addAll(getRookMoves(row, col).captures)
+
+        moves.addAll(getBishopMoves(row, col ).moves)
+        captures.addAll(getBishopMoves(row, col).captures)
+
+        return MoveResult(moves.toList(),captures.toList())
+    }
 }
