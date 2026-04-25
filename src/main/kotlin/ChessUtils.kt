@@ -17,3 +17,8 @@ fun findKing(board: Board,player: Player) : Pair<Int, Int>?
 
     return null
 }
+
+fun isWhiteSquare(row: Int, col: Int): Boolean
+{
+    return (row + col) % 2 == 0
+}
