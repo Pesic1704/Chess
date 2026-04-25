@@ -130,4 +130,48 @@ class MoveValidator(private val board: Board)
 
         return MoveResult(moves.toList(),captures.toList())
     }
+    fun getPawnMoves( row: Int, col: Int): MoveResult
+    {
+        val moves = mutableListOf<Pair<Pair<Int, Int>, Int>> ()
+        val captures = mutableListOf<Pair<Int, Int>> ()
+
+        val piece = board.grid[row][col] ?: return MoveResult(moves.toList(),captures.toList())
+
+        val direction = if (piece.player == Player.WHITE) -1 else 1
+        val startRow = if (piece.player == Player.WHITE) 6 else 1
+
+        val oneStep = row + direction
+        val twoStep = row + 2 * direction
+
+        if (oneStep in 0..7 && board.grid[oneStep][col] == null)
+        {
+            moves.add((oneStep to col) to 0)
+            if (row == startRow && board.grid[twoStep][col] == null)
+            {
+                moves.add((twoStep to col) to 0)
+            }
+        }
+
+        val directions = listOf(-1,1)
+
+        for (dirCol in directions)
+        {
+            val newCol = col + dirCol
+
+            if (oneStep in 0..7 && newCol in 0..7)
+            {
+                val target = board.grid[oneStep][newCol]
+
+                if (target != null && target.player != piece.player)
+                {
+                    moves.add((oneStep to newCol) to 0)
+                    captures.add(oneStep to newCol)
+                }
+            }
+        }
+
+        // TODO en passant
+
+        return MoveResult(moves.toList(),captures.toList())
+    }
 }
