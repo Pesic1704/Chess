@@ -1,5 +1,58 @@
 class MoveValidator(private val board: Board)
 {
+    fun getLegalMoves(row: Int, col: Int): MoveResult
+    {
+        val piece = board.grid[row][col] ?: return MoveResult(emptyList(), emptyList())
+
+        val pseudoResults = getPseudoLegalMoves(row, col)
+
+        val legalMoves = mutableListOf<Pair<Pair<Int, Int>, Int>> ()
+        val legalCaptures = mutableListOf<Pair<Int, Int>> ()
+
+        for ((pos, type) in pseudoResults.moves)
+        {
+            val (toRow, toCol) = pos
+
+            val copy = board.copy()
+
+            copy.grid[toRow][toCol] = piece
+            copy.grid[row][col] = null
+
+           // TODO en passant and castling
+
+            val opponent = if (piece.player == Player.WHITE) Player.BLACK else Player.WHITE
+
+            if (!copy.isPlayerGivingCheck(opponent))
+            {
+                legalMoves.add(toRow to toCol to type)
+
+                if((toRow to toCol) in pseudoResults.captures)
+                {
+                    legalCaptures.add(toRow to toCol)
+                }
+            }
+        }
+
+        return MoveResult(legalMoves.toList(), legalCaptures.toList())
+    }
+
+    fun getPseudoLegalMoves(row: Int, col: Int ): MoveResult
+    {
+        val piece = board.grid[row][col] ?: return MoveResult(emptyList(), emptyList())
+
+        return when (piece.type)
+        {
+            Piece.ROOK -> getRookMoves( row, col)
+            Piece.BISHOP -> getBishopMoves( row, col)
+            Piece.QUEEN -> getQueenMoves( row, col)
+            Piece.KNIGHT -> getKnightMoves( row, col)
+            Piece.PAWN -> getPawnMoves( row, col)
+            Piece.KING -> getKingMoves( row, col)
+
+            // TODO en passant and castling
+        }
+    }
+
 
     fun getRookMoves( row: Int, col: Int): MoveResult
     {
