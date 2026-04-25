@@ -174,4 +174,38 @@ class MoveValidator(private val board: Board)
 
         return MoveResult(moves.toList(),captures.toList())
     }
+    fun getKingMoves(row: Int, col: Int): MoveResult
+    {
+        val moves = mutableListOf<Pair<Pair<Int, Int>, Int>> ()
+        val captures = mutableListOf<Pair<Int, Int>> ()
+
+        val piece = board.grid[row][col] ?: return MoveResult(moves.toList(),captures.toList())
+
+        val directions = listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1,  1 to 0,  1 to 1)
+
+        for ((dirRow, dirCol) in directions) {
+
+            val newRow = row + dirRow
+            val newCol = col + dirCol
+
+            if (newRow in 0..7 && newCol in 0..7) {
+
+                val target = board.grid[newRow][newCol]
+
+                if (target == null)
+                {
+                    moves.add(newRow to newCol to 0)
+                }
+                else if (target.player != piece.player)
+                {
+                    moves.add(newRow to newCol to 0)
+                    captures.add(newRow to newCol)
+                }
+            }
+        }
+
+        // TODO castling
+
+        return MoveResult(moves.toList(),captures.toList())
+    }
 }
