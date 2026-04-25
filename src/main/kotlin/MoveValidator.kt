@@ -22,7 +22,9 @@ class MoveValidator(private val board: Board)
 
             val opponent = if (piece.player == Player.WHITE) Player.BLACK else Player.WHITE
 
-            if (!copy.isPlayerGivingCheck(opponent))
+            val validator = CheckValidator(copy)
+
+            if (!validator.isPlayerGivingCheck(opponent))
             {
                 legalMoves.add(toRow to toCol to type)
 
