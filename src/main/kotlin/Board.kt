@@ -16,9 +16,9 @@ class Board
 
     fun clear()
     {
-        for (r in 0..7)
-            for (c in 0..7)
-                grid[r][c] = null
+        for (row in 0..7)
+            for (col in 0..7)
+                grid[row][col] = null
     }
 
     fun setUpInitialBoard()
@@ -50,6 +50,17 @@ class Board
         {
             grid[6][col] = ChessPiece(Piece.PAWN, Player.WHITE)
         }
+    }
+
+    fun copy(): Board
+    {
+        val newBoard = Board()
+
+        for (row in 0..7)
+            for (col in 0..7)
+                newBoard.grid[row][col] = grid[row][col]
+
+        return newBoard
     }
 
 }
