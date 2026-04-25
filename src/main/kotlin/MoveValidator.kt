@@ -1,8 +1,8 @@
 class MoveValidator(private val board: Board)
 {
-    fun getLegalMoves(row: Int, col: Int): MoveResult
+    fun getLegalMoves(row: Int, col: Int): MoveOptions
     {
-        val piece = board.grid[row][col] ?: return MoveResult(emptyList(), emptyList())
+        val piece = board.grid[row][col] ?: return MoveOptions(emptyList(), emptyList())
 
         val pseudoResults = getPseudoLegalMoves(row, col)
 
@@ -35,12 +35,11 @@ class MoveValidator(private val board: Board)
             }
         }
 
-        return MoveResult(legalMoves.toList(), legalCaptures.toList())
+        return MoveOptions(legalMoves.toList(), legalCaptures.toList())
     }
-
-    fun getPseudoLegalMoves(row: Int, col: Int ): MoveResult
+    fun getPseudoLegalMoves(row: Int, col: Int ): MoveOptions
     {
-        val piece = board.grid[row][col] ?: return MoveResult(emptyList(), emptyList())
+        val piece = board.grid[row][col] ?: return MoveOptions(emptyList(), emptyList())
 
         return when (piece.type)
         {
@@ -56,12 +55,12 @@ class MoveValidator(private val board: Board)
     }
 
 
-    fun getRookMoves( row: Int, col: Int): MoveResult
+    fun getRookMoves( row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, Int>> ()
         val captures = mutableListOf<Pair<Int, Int>> ()
 
-        val piece = board.grid[row][col] ?: return MoveResult(moves.toList(),captures.toList())
+        val piece = board.grid[row][col] ?: return MoveOptions(moves.toList(),captures.toList())
 
         val directions = listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1)
 
@@ -96,14 +95,14 @@ class MoveValidator(private val board: Board)
             }
         }
 
-        return MoveResult(moves.toList(),captures.toList())
+        return MoveOptions(moves.toList(),captures.toList())
     }
-    fun getBishopMoves(row: Int, col: Int): MoveResult
+    fun getBishopMoves(row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, Int>> ()
         val captures = mutableListOf<Pair<Int, Int>> ()
 
-        val piece = board.grid[row][col] ?: return MoveResult(moves.toList(),captures.toList())
+        val piece = board.grid[row][col] ?: return MoveOptions(moves.toList(),captures.toList())
 
         val directions = listOf(1 to 1, 1 to -1, -1 to 1, -1 to -1)
 
@@ -135,9 +134,9 @@ class MoveValidator(private val board: Board)
             }
         }
 
-        return MoveResult(moves.toList(),captures.toList())
+        return MoveOptions(moves.toList(),captures.toList())
     }
-    fun getQueenMoves( row: Int, col: Int): MoveResult
+    fun getQueenMoves( row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, Int>>()
         val captures = mutableListOf<Pair<Int, Int>> ()
@@ -148,14 +147,14 @@ class MoveValidator(private val board: Board)
         moves.addAll(getBishopMoves(row, col ).moves)
         captures.addAll(getBishopMoves(row, col).captures)
 
-        return MoveResult(moves.toList(),captures.toList())
+        return MoveOptions(moves.toList(),captures.toList())
     }
-    fun getKnightMoves(row: Int, col: Int): MoveResult
+    fun getKnightMoves(row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, Int>>()
         val captures = mutableListOf<Pair<Int, Int>> ()
 
-        val piece = board.grid[row][col] ?: return MoveResult(moves.toList(),captures.toList())
+        val piece = board.grid[row][col] ?: return MoveOptions(moves.toList(),captures.toList())
 
         val directions = listOf(-2 to -1, -2 to 1, -1 to -2, -1 to 2, 1 to -2, 1 to 2, 2 to -1, 2 to 1)
 
@@ -183,14 +182,14 @@ class MoveValidator(private val board: Board)
             }
         }
 
-        return MoveResult(moves.toList(),captures.toList())
+        return MoveOptions(moves.toList(),captures.toList())
     }
-    fun getPawnMoves( row: Int, col: Int): MoveResult
+    fun getPawnMoves( row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, Int>> ()
         val captures = mutableListOf<Pair<Int, Int>> ()
 
-        val piece = board.grid[row][col] ?: return MoveResult(moves.toList(),captures.toList())
+        val piece = board.grid[row][col] ?: return MoveOptions(moves.toList(),captures.toList())
 
         val direction = if (piece.player == Player.WHITE) -1 else 1
         val startRow = if (piece.player == Player.WHITE) 6 else 1
@@ -227,14 +226,14 @@ class MoveValidator(private val board: Board)
 
         // TODO en passant
 
-        return MoveResult(moves.toList(),captures.toList())
+        return MoveOptions(moves.toList(),captures.toList())
     }
-    fun getKingMoves(row: Int, col: Int): MoveResult
+    fun getKingMoves(row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, Int>> ()
         val captures = mutableListOf<Pair<Int, Int>> ()
 
-        val piece = board.grid[row][col] ?: return MoveResult(moves.toList(),captures.toList())
+        val piece = board.grid[row][col] ?: return MoveOptions(moves.toList(),captures.toList())
 
         val directions = listOf(-1 to -1, -1 to 0, -1 to 1, 0 to -1, 0 to 1, 1 to -1,  1 to 0,  1 to 1)
 
@@ -261,6 +260,6 @@ class MoveValidator(private val board: Board)
 
         // TODO castling
 
-        return MoveResult(moves.toList(),captures.toList())
+        return MoveOptions(moves.toList(),captures.toList())
     }
 }

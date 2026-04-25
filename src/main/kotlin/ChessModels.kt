@@ -22,7 +22,20 @@ data class ChessPiece(
     var player: Player
 )
 
-data class MoveResult(
+data class MoveOptions(
     val moves: List<Pair<Pair<Int, Int>, Int>>,
     val captures: List<Pair<Int, Int>>
+)
+
+enum class GameState
+{
+    PLAYING,
+    CHECKMATE,
+    STALEMATE,
+    DRAW
+}
+
+data class CheckState(
+    val isCheck: Boolean,
+    val kingPosition: Pair<Int, Int>?
 )
