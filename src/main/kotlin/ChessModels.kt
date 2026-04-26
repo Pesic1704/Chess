@@ -30,6 +30,7 @@ data class MoveOptions(
 enum class GameState
 {
     PLAYING,
+    RESIGNED,
     CHECKMATE,
     STALEMATE,
     DRAW

@@ -30,6 +30,25 @@ class Game
         board.setUpInitialBoard()
     }
 
+    fun restartGame()
+    {
+
+    }
+
+    fun resignGame()
+    {
+        gameState = GameState.RESIGNED
+
+        if(playerOnTurn == Player.WHITE)
+        {
+            message = "RESIGNED!" + "   " + whoWon(Player.BLACK)
+        }
+        else
+        {
+            message = "RESIGNED!" + "   " + whoWon(Player.WHITE)
+        }
+    }
+
     fun onSquareClick(row: Int, col: Int)
     {
         if (gameState != GameState.PLAYING) return
@@ -63,17 +82,10 @@ class Game
 
                 board = newBoard
 
+                evaluateCheck(playerOnTurn)
                 evaluateEndConditions(playerOnTurn)
 
-                if(playerOnTurn == Player.WHITE)
-                {
-                    playerOnTurn = Player.BLACK
-                }
-                else
-                {
-                    playerOnTurn = Player.WHITE
-                }
-
+                switchPlayerOnTurn()
             }
 
             selectedStartSquare = null
@@ -109,6 +121,31 @@ class Game
             moveOptions=validator.getLegalMoves(row, col)
         }
     }
+    fun switchPlayerOnTurn()
+    {
+        if(playerOnTurn == Player.WHITE)
+        {
+            playerOnTurn = Player.BLACK
+        }
+        else
+        {
+            playerOnTurn = Player.WHITE
+        }
+    }
+    fun evaluateCheck(player: Player)
+    {
+        val validator = CheckValidator(board)
+
+        if (validator.isPlayerGivingCheck(player))
+        {
+            val enemy = if (player == Player.WHITE) Player.BLACK else Player.WHITE
+            checkState = CheckState(true, findKing(board, enemy))
+        }
+        else
+        {
+            checkState = CheckState(false, null)
+        }
+    }
     fun evaluateEndConditions(player: Player)
     {
         val validator = CheckValidator(board)
@@ -132,16 +169,6 @@ class Game
         {
             message = ""
             gameState = GameState.PLAYING
-        }
-
-        if (validator.isPlayerGivingCheck(player))
-        {
-            val enemy = if (player == Player.WHITE) Player.BLACK else Player.WHITE
-            checkState = CheckState(true, findKing(board, enemy))
-        }
-        else
-        {
-            checkState = CheckState(false, null)
         }
     }
 }

@@ -56,7 +56,7 @@ fun App(game: Game)
         {
             // TODO TIMER
 
-            topBarItems()
+            topBarItems(game)
         }
 
         // MAIN AREA
@@ -284,7 +284,7 @@ fun ChessBoard(
 }
 
 @Composable
-fun topBarItems()
+fun topBarItems(game: Game)
 {
     //TODO
     Row(
@@ -294,7 +294,8 @@ fun topBarItems()
             .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
-    ) {
+    )
+    {
 
         TimerBox(
             //TODO
@@ -305,14 +306,10 @@ fun topBarItems()
             textColor = Color.White
         )
 
-        Row {
-            styledButton("RESTART GAME") {
-                // TODO empty function
-            }
-
-            styledButton("RESIGN") {
-                // TODO empty function
-            }
+        Row()
+        {
+            styledButton("RESTART GAME",{game.restartGame()})
+            styledButton("RESIGN GAME",{game.resignGame()})
         }
 
         TimerBox(
@@ -442,9 +439,9 @@ fun gameInfoText(game : Game)
         {
             Text(
                 text = if (game.playerOnTurn == Player.WHITE)
-                            "White to move  "
+                            "White to move"
                         else
-                            "Black to move ",
+                            "Black to move",
                 style = MaterialTheme.typography.headlineMedium
             )
         }
