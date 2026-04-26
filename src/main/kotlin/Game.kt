@@ -134,7 +134,8 @@ class Game
 
         if (validator.isPlayerGivingCheck(player))
         {
-            checkState = CheckState(true, findKing(board,player))
+            val enemy = if (player == Player.WHITE) Player.BLACK else Player.WHITE
+            checkState = CheckState(true, findKing(board, enemy))
         }
         else
         {

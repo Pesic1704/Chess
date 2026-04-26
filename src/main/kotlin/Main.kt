@@ -6,6 +6,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
@@ -151,61 +152,92 @@ fun App(game: Game) {
 fun ChessBoard(
     game: Game,
     onSquareClick: (row: Int, col: Int) -> Unit
-) {
+)
+{
     val lightSquare = Color(0xFFF0D9B5)
     val darkSquare = Color(0xFFB58863)
+    val checkSquare = Color(0xFFE53935)
 
     Row(
         modifier = Modifier.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        // left numbers
-        Column {
-            for (row in 0..7) {
+    )
+    {
+        Column()
+        {
+            for (row in 0..7)
+            {
                 Box(
                     modifier = Modifier.size(36.dp, 96.dp),
                     contentAlignment = Alignment.Center
-                ) {
+                )
+                {
                     Text("${8 - row}", fontSize = 24.sp)
                 }
             }
         }
 
-        Column {
+        Column()
+        {
             Box(
                 modifier = Modifier
                     .border(4.dp, Color(0xFF5C4033), RoundedCornerShape(12.dp))
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFF5C4033))
                     .padding(8.dp)
-            ) {
-
-                Column {
-                    for (row in 0..7) {
-                        Row {
-                            for (col in 0..7) {
-
-                                val board=game.board
-                                val piece = board.grid[row][col]
-                                val isWhiteSquare = (row + col) % 2 == 0
+            )
+            {
+                Column()
+                {
+                    for (row in 0..7)
+                    {
+                        Row()
+                        {
+                            for (col in 0..7)
+                            {
+                                val piece = game.board.grid[row][col]
+                                val isCheck = game.checkState.isCheck && game.checkState.kingPosition == (row to col)
+                                val isSelected = game.selectedStartSquare == (row to col)
+                                val isMovable = (row to col) in game.moveOptions.moves.map { it.first }.toSet()
+                                val isCapturable = (row to col) in game.moveOptions.captures
 
                                 Box(
                                     modifier = Modifier
                                         .size(96.dp)
-                                        .background(if (isWhiteSquare) lightSquare else darkSquare)
+                                        .background(if (isWhiteSquare(row,col)) lightSquare else darkSquare)
+                                        .then(if (isCheck)
+                                                        Modifier.background(checkSquare.copy(alpha = 0.4f))
+                                                    else
+                                                        Modifier
+                                        )
+                                        .then(if (isSelected)
+                                                        Modifier.border(3.dp, Color.Green)
+                                                    else
+                                                        Modifier
+                                        )
                                         .clickable { onSquareClick(row, col) },
                                     contentAlignment = Alignment.Center
-                                ) {
+                                )
+                                {
+                                    if (isCapturable)
+                                    {
+                                        Box(modifier = Modifier.fillMaxSize().padding(4.dp).border(3.dp, Color.Black.copy(alpha = 0.35f), CircleShape))
+                                    }
+                                    else if (isMovable)
+                                    {
+                                        Box(modifier = Modifier.size(14.dp).background(Color.Black.copy(alpha = 0.35f), CircleShape))
+                                    }
 
-                                    if (piece != null) {
+                                    if (piece != null)
+                                    {
                                         Text(
                                             text = piece.type.getSymbol(),
                                             fontSize = 64.sp,
                                             modifier = Modifier.scale(1.4f),
                                             color = if (piece.player == Player.WHITE)
-                                                Color.White
-                                            else Color.Black
+                                                        Color.White
+                                                    else
+                                                        Color.Black
                                         )
                                     }
                                 }
@@ -215,13 +247,15 @@ fun ChessBoard(
                 }
             }
 
-            // bottom letters
-            Row {
-                for (c in 'a'..'h') {
+            Row()
+            {
+                for (c in 'a'..'h')
+                {
                     Box(
                         modifier = Modifier.size(96.dp, 36.dp),
                         contentAlignment = Alignment.Center
-                    ) {
+                    )
+                    {
                         Text("$c", fontSize = 24.sp)
                     }
                 }
