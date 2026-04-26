@@ -33,7 +33,8 @@ enum class GameState
     RESIGNED,
     CHECKMATE,
     STALEMATE,
-    DRAW
+    DRAW,
+    TIMEOUT
 }
 
 data class CheckState(

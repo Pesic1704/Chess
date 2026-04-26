@@ -45,8 +45,6 @@ fun App(game: Game)
         modifier = Modifier.fillMaxSize()
     )
     {
-
-        // TOP LABELS
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -54,12 +52,10 @@ fun App(game: Game)
                 .background(Color(0xFFB58863))
         )
         {
-            // TODO TIMER
-
+            game.startTimer()
             topBarItems(game)
         }
 
-        // MAIN AREA
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,7 +64,6 @@ fun App(game: Game)
             horizontalArrangement = Arrangement.Center
         )
         {
-
             Column(
                 modifier = Modifier
                     .background(Color(0xFFB58863))
@@ -99,7 +94,6 @@ fun App(game: Game)
                 horizontalArrangement = Arrangement.SpaceEvenly
             )
             {
-
                 Column(horizontalAlignment = Alignment.CenterHorizontally)
                 {
                     Text(
@@ -286,7 +280,6 @@ fun ChessBoard(
 @Composable
 fun topBarItems(game: Game)
 {
-    //TODO
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -298,10 +291,9 @@ fun topBarItems(game: Game)
     {
 
         TimerBox(
-            //TODO
             label = "White",
-            minutes = 0,
-            seconds = 0,
+            minutes = game.timeLeftWhite / 60,
+            seconds = game.timeLeftWhite % 60,
             background = Color.DarkGray,
             textColor = Color.White
         )
@@ -313,10 +305,9 @@ fun topBarItems(game: Game)
         }
 
         TimerBox(
-            //TODO
             label = "Black",
-            minutes = 0,
-            seconds = 0,
+            minutes = game.timeLeftBlack / 60,
+            seconds = game.timeLeftBlack % 60,
             background = Color(0xFFB58863),
             textColor = Color.White
         )

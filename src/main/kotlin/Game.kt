@@ -1,9 +1,15 @@
 import androidx.compose.runtime.mutableStateOf
-import kotlin.collections.get
-import kotlin.collections.plus
-import kotlin.collections.set
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import kotlin.collections.plus
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.isActive
+
 
 class Game
 {
@@ -21,7 +27,10 @@ class Game
     var moveOptions by mutableStateOf(MoveOptions(emptyList(), emptyList()))
     var capturedPieces by mutableStateOf(listOf<ChessPiece>())
 
-
+    var timeLeftWhite by mutableIntStateOf(900)
+    var timeLeftBlack by mutableIntStateOf(900)
+    private var timerJob: Job? = null
+    private val gameScope = CoroutineScope(Dispatchers.Default)
 
 
     fun init()
@@ -29,15 +38,15 @@ class Game
         board.clear()
         board.setUpInitialBoard()
     }
-
     fun restartGame()
     {
 
     }
-
     fun resignGame()
     {
         gameState = GameState.RESIGNED
+
+        timerJob?.cancel()
 
         if(playerOnTurn == Player.WHITE)
         {
@@ -169,6 +178,51 @@ class Game
         {
             message = ""
             gameState = GameState.PLAYING
+        }
+
+        if(gameState != GameState.PLAYING)
+        {
+            timerJob?.cancel()
+        }
+    }
+
+    fun startTimer()
+    {
+        timerJob?.cancel()
+
+        timerJob = gameScope.launch()
+        {
+            while (isActive && gameState == GameState.PLAYING)
+            {
+                delay(1000L)
+
+                if (playerOnTurn == Player.WHITE)
+                {
+                    if (timeLeftWhite > 0)
+                    {
+                        timeLeftWhite--
+                    }
+                    else
+                    {
+                        message = "TIMEOUT!" + "   " + whoWon(Player.BLACK)
+                        gameState = GameState.TIMEOUT
+                        timerJob?.cancel()
+                    }
+                }
+                else
+                {
+                    if (timeLeftBlack > 0)
+                    {
+                        timeLeftBlack--
+                    }
+                    else
+                    {
+                        message = "TIMEOUT!" + "   " + whoWon(Player.WHITE)
+                        gameState = GameState.TIMEOUT
+                        timerJob?.cancel()
+                    }
+                }
+            }
         }
     }
 }
