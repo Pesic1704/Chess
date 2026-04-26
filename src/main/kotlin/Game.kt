@@ -38,11 +38,7 @@ class Game
 
         if( isEndSquareSelected )
         {
-
             val (fromRow, fromCol) = selectedStartSquare ?: return
-
-            val validator= MoveValidator(board)
-            moveOptions=validator.getLegalMoves(fromRow, fromCol)
 
             val legalMoves = moveOptions.moves.map { it.first }.toSet()
 
@@ -96,6 +92,9 @@ class Game
             if( piece != null && piece.player == playerOnTurn)
             {
                 selectedStartSquare = row to col
+
+                val validator= MoveValidator(board)
+                moveOptions=validator.getLegalMoves(row, col)
             }
         }
         else if( piece == null || piece.player != playerOnTurn)
@@ -105,6 +104,9 @@ class Game
         else
         {
             selectedStartSquare = row to col
+
+            val validator= MoveValidator(board)
+            moveOptions=validator.getLegalMoves(row, col)
         }
     }
     fun evaluateEndConditions(player: Player)
@@ -113,17 +115,17 @@ class Game
 
         if (validator.isOpponentCheckmatedByPlayer(player))
         {
-            message = "CHECKMATE!" + whoWon(player)
+            message = "CHECKMATE!" + "  " + whoWon(player)
             gameState = GameState.CHECKMATE
         }
         else if (validator.isStalemateCausedByPlayer(player))
         {
-            message = "STALEMATE!" + whoWon(null)
+            message = "STALEMATE!" + "  " + whoWon(null)
             gameState = GameState.STALEMATE
         }
         else if (validator.isDraw())
         {
-            message = "DRAW!" + whoWon(null)
+            message = "DRAW!" + "  " + whoWon(null)
             gameState = GameState.DRAW
         }
         else

@@ -100,21 +100,29 @@ fun App(game: Game)
             )
             {
 
-                Column()
+                Column(horizontalAlignment = Alignment.CenterHorizontally)
                 {
                     Text(
                         "White captures",
                         style = commonTextStyle
                     )
 
-                    // TODO WHITE_CAPTURED
+                    game.capturedPieces
+                        .filter { it.player == Player.WHITE }
+                        .forEach{ piece ->
+                            Text(
+                                text = piece.type.getSymbol(),
+                                fontSize = 40.sp,
+                                color = Color.White
+                            )
+                        }
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Column()
+                Column(horizontalAlignment = Alignment.CenterHorizontally)
                 {
-                    GameInfoText(game)
+                    gameInfoText(game)
 
                     Box(
                         modifier = Modifier
@@ -131,14 +139,22 @@ fun App(game: Game)
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Column()
+                Column(horizontalAlignment = Alignment.CenterHorizontally)
                 {
                     Text(
                         "Black captures",
                         style = commonTextStyle
                     )
 
-                    // TODO BLACK_CAPTURED
+                    game.capturedPieces
+                        .filter { it.player == Player.BLACK }
+                        .forEach{ piece ->
+                            Text(
+                                text = piece.type.getSymbol(),
+                                fontSize = 40.sp,
+                                color = Color.Black
+                            )
+                        }
                 }
             }
 
@@ -410,7 +426,7 @@ fun promotionDialog()
 }
 
 @Composable
-fun GameInfoText(game : Game)
+fun gameInfoText(game : Game)
 {
     Row()
     {

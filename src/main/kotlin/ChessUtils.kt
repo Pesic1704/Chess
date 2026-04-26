@@ -27,8 +27,8 @@ fun whoWon(player: Player?): String
 {
     return when (player)
     {
-        null -> "NO WINNER"
-        Player.WHITE -> "WHITE WON"
-        Player.BLACK -> "BLACK WON"
+        null -> "NO WINNER!"
+        Player.WHITE -> "WHITE WON!"
+        Player.BLACK -> "BLACK WON!"
     }
 }
