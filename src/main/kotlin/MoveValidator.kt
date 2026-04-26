@@ -19,11 +19,11 @@ class MoveValidator(private val board: Board)
             if(type == MoveType.NORMAL)
             {
                 val tempBoard = board.copy()
-                val validator = CheckValidator(tempBoard)
 
                 tempBoard.grid[toRow][toCol] = piece
                 tempBoard.grid[row][col] = null
 
+                val validator = CheckValidator(tempBoard)
                 if (validator.isPlayerGivingCheck(opponent))
                 {
                     isLegal = false
@@ -65,7 +65,17 @@ class MoveValidator(private val board: Board)
             }
             else if (type == MoveType.EN_PASSANT)
             {
-                // TODO en passant
+                val tempBoard = board.copy()
+
+                tempBoard.grid[toRow][toCol] = piece
+                tempBoard.grid[row][col] = null
+                tempBoard.grid[row][toCol] = null
+
+                val validator = CheckValidator(tempBoard)
+                if (validator.isPlayerGivingCheck(opponent))
+                {
+                    isLegal = false
+                }
             }
 
             if (isLegal)
@@ -92,8 +102,6 @@ class MoveValidator(private val board: Board)
             Piece.KNIGHT -> getKnightMoves( row, col)
             Piece.PAWN -> getPawnMoves( row, col)
             Piece.KING -> getKingMoves( row, col)
-
-            // TODO en passant
         }
     }
 
@@ -233,11 +241,11 @@ class MoveValidator(private val board: Board)
 
         val piece = board.grid[row][col] ?: return MoveOptions(moves.toList(),captures.toList())
 
-        val direction = if (piece.player == Player.WHITE) -1 else 1
+        val moveDirection = if (piece.player == Player.WHITE) -1 else 1
         val startRow = if (piece.player == Player.WHITE) 6 else 1
 
-        val oneStep = row + direction
-        val twoStep = row + 2 * direction
+        val oneStep = row + moveDirection
+        val twoStep = row + 2 * moveDirection
 
         if (oneStep in 0..7 && board.grid[oneStep][col] == null)
         {
@@ -266,7 +274,19 @@ class MoveValidator(private val board: Board)
             }
         }
 
-        // TODO en passant
+        if (board.enPassantTarget != null)
+        {
+            if (((row+moveDirection) to (col-1)) == board.enPassantTarget)
+            {
+                moves.add(Pair(Pair(row + moveDirection, col - 1), MoveType.EN_PASSANT))
+                captures.add(Pair(row + moveDirection, col - 1))
+            }
+            if (((row+moveDirection) to (col+1)) == board.enPassantTarget)
+            {
+                moves.add(Pair(Pair(row + moveDirection, col + 1), MoveType.EN_PASSANT))
+                captures.add(Pair(row + moveDirection, col + 1))
+            }
+        }
 
         return MoveOptions(moves.toList(),captures.toList())
     }

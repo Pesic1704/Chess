@@ -2,6 +2,7 @@ class Board
 {
     val grid = Array(8) { arrayOfNulls<ChessPiece?>(8) }
     var castlingRights = CastlingRights(true,true,true,true)
+    var enPassantTarget: Pair<Int, Int>? = null
 
     fun get(row: Int, col: Int) = grid[row][col]
     fun set(row: Int, col: Int, piece: ChessPiece?)
@@ -52,6 +53,10 @@ class Board
         castlingRights.whiteKingSide = true
         castlingRights.blackKingSide = true
     }
+    fun setUpEnPassantTarget()
+    {
+        enPassantTarget = null
+    }
 
     fun copy(): Board
     {
@@ -67,6 +72,7 @@ class Board
         }
 
         newBoard.castlingRights = castlingRights.copy()
+        newBoard.enPassantTarget = enPassantTarget?.copy()
 
         return newBoard
     }

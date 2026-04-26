@@ -9,6 +9,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.isActive
+import kotlin.collections.plus
+import kotlin.div
+import kotlin.math.abs
+import kotlin.text.compareTo
+import kotlin.text.get
 import kotlin.text.set
 
 
@@ -71,80 +76,97 @@ class Game
         if( isEndSquareSelected )
         {
             val (fromRow, fromCol) = selectedStartSquare ?: return
+            val (toRow, toCol) = row to col
 
             val legalMoves = moveOptions.moves.map { it.first }.toSet()
 
-            if (row to col in legalMoves)
+            if (toRow to toCol in legalMoves)
             {
                 val movingPiece = board.grid[fromRow][fromCol]
-                val capturedPiece = board.grid[row][col]
 
-                if (capturedPiece != null)
-                {
-                    capturedPieces = capturedPieces + capturedPiece
-
-
-                }
-
-                //TODO en passant,hystory
-
-                if((row to col) == (0 to 0))
-                {
-                    board.castlingRights.blackQueenSide=false
-                }
-                if((row to col) == (0 to 7))
-                {
-                    board.castlingRights.blackKingSide=false
-                }
-                if((row to col) == (7 to 0))
-                {
-                    board.castlingRights.whiteQueenSide=false
-                }
-                if((row to col) == (7 to 7))
-                {
-                    board.castlingRights.whiteKingSide=false
-                }
-                if((row to col) == (0 to 4))
-                {
-                    board.castlingRights.blackKingSide=false
-                    board.castlingRights.blackQueenSide=false
-                }
-                if((row to col) == (7 to 4))
-                {
-                    board.castlingRights.whiteKingSide=false
-                    board.castlingRights.whiteQueenSide=false
-                }
-
+                //TODO hystory
 
                 val tempBoard = board.copy()
 
-                if (movingPiece!!.type == Piece.KING && Math.abs(fromCol - col) == 2)
+                if (movingPiece!!.type == Piece.KING && abs(fromCol - toCol) == 2)
                 {
                     tempBoard.grid[fromRow][fromCol] = null;
-                    tempBoard.grid[row][col] = movingPiece;
+                    tempBoard.grid[toRow][toCol] = movingPiece;
 
-                    if (col < fromCol)
+                    if (toCol < fromCol)
                     {
-                        tempBoard.grid[fromRow][col + 1] = tempBoard.grid[fromRow][0];
+                        tempBoard.grid[fromRow][toCol + 1] = tempBoard.grid[fromRow][0];
                         tempBoard.grid[fromRow][0] = null
                     }
                     else
                     {
-                        tempBoard.grid[fromRow][col - 1] = tempBoard.grid[fromRow][7];
+                        tempBoard.grid[fromRow][toCol - 1] = tempBoard.grid[fromRow][7];
                         tempBoard.grid[fromRow][7] = null
                     }
                 }
+                else if(movingPiece!!.type == Piece.PAWN && (toRow to toCol) == tempBoard.enPassantTarget)
+                {
+                    val capturedPiece = tempBoard.grid[fromRow][toCol]!!
+                    capturedPieces += capturedPiece
+
+                    tempBoard.grid[toRow][toCol] = movingPiece
+                    tempBoard.grid[fromRow][fromCol] = null
+                    tempBoard.grid[fromRow][toCol] = null
+                }
                 else
                 {
-                    tempBoard.set(row, col, movingPiece)
+                    val capturedPiece = tempBoard.grid[toRow][toCol]
+                    if(capturedPiece != null)
+                    {
+                        capturedPieces += capturedPiece
+                    }
+
+                    tempBoard.set(toRow, toCol, movingPiece)
                     tempBoard.set(fromRow, fromCol, null)
+                }
+
+                if((toRow to toCol) == (0 to 0))
+                {
+                    tempBoard.castlingRights.blackQueenSide=false
+                }
+                if((toRow to toCol) == (0 to 7))
+                {
+                    tempBoard.castlingRights.blackKingSide=false
+                }
+                if((toRow to toCol) == (7 to 0))
+                {
+                    tempBoard.castlingRights.whiteQueenSide=false
+                }
+                if((toRow to toCol) == (7 to 7))
+                {
+                    tempBoard.castlingRights.whiteKingSide=false
+                }
+                if((toRow to toCol) == (0 to 4))
+                {
+                    tempBoard.castlingRights.blackKingSide=false
+                    tempBoard.castlingRights.blackQueenSide=false
+                }
+                if((toRow to toCol) == (7 to 4))
+                {
+                    tempBoard.castlingRights.whiteKingSide=false
+                    tempBoard.castlingRights.whiteQueenSide=false
+                }
+
+                if(movingPiece!!.type == Piece.PAWN && abs(toRow - fromRow) == 2)
+                {
+                    tempBoard.enPassantTarget=((fromRow + toRow)/2) to toCol
+                }
+                else
+                {
+                    tempBoard.enPassantTarget= null
                 }
 
                 board = tempBoard
 
-                if (checkPromotionConditions(movingPiece!!,row, col))
+
+                if (checkPromotionConditions(movingPiece!!,toRow, toCol))
                 {
-                    promotionSquare = row to col
+                    promotionSquare = toRow to toCol
                     pendingPromotionPlayer = movingPiece.player
                     return
                 }
