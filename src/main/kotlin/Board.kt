@@ -1,17 +1,12 @@
 class Board
 {
     val grid = Array(8) { arrayOfNulls<ChessPiece?>(8) }
+    var castlingRights = CastlingRights(true,true,true,true)
 
     fun get(row: Int, col: Int) = grid[row][col]
-
     fun set(row: Int, col: Int, piece: ChessPiece?)
     {
         grid[row][col] = piece
-    }
-
-    fun move()
-    {
-        //TODO
     }
 
     fun clear()
@@ -20,7 +15,6 @@ class Board
             for (col in 0..7)
                 grid[row][col] = null
     }
-
     fun setUpInitialBoard()
     {
         grid[0][0] = ChessPiece(Piece.ROOK, Player.BLACK)
@@ -51,6 +45,13 @@ class Board
             grid[6][col] = ChessPiece(Piece.PAWN, Player.WHITE)
         }
     }
+    fun setUpCastlingRights()
+    {
+        castlingRights.whiteQueenSide = true
+        castlingRights.blackQueenSide = true
+        castlingRights.whiteKingSide = true
+        castlingRights.blackKingSide = true
+    }
 
     fun copy(): Board
     {
@@ -64,6 +65,8 @@ class Board
                 newBoard.grid[row][col] = piece?.copy()
             }
         }
+
+        newBoard.castlingRights = castlingRights.copy()
 
         return newBoard
     }

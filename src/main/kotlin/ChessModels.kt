@@ -22,8 +22,16 @@ data class ChessPiece(
     var player: Player
 )
 
+enum class MoveType
+{
+    NORMAL,
+    CASTLE_KINGS_SIDE,
+    CASTLE_QUEENS_SIDE,
+    EN_PASSANT
+}
+
 data class MoveOptions(
-    val moves: List<Pair<Pair<Int, Int>, Int>>,
+    val moves: List<Pair<Pair<Int, Int>, MoveType>>,
     val captures: List<Pair<Int, Int>>
 )
 
@@ -40,4 +48,11 @@ enum class GameState
 data class CheckState(
     val isCheck: Boolean,
     val kingPosition: Pair<Int, Int>?
+)
+
+data class CastlingRights(
+    var whiteKingSide: Boolean,
+    var whiteQueenSide: Boolean,
+    var blackKingSide: Boolean,
+    var blackQueenSide: Boolean
 )

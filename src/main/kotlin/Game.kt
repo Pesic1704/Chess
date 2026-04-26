@@ -9,6 +9,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.isActive
+import kotlin.text.set
 
 
 class Game
@@ -39,6 +40,7 @@ class Game
     {
         board.clear()
         board.setUpInitialBoard()
+        board.setUpCastlingRights()
     }
     fun restartGame()
     {
@@ -84,14 +86,61 @@ class Game
 
                 }
 
-                //TODO en passant,castling,hystory
+                //TODO en passant,hystory
 
-                val newBoard = board.copy()
+                if((row to col) == (0 to 0))
+                {
+                    board.castlingRights.blackQueenSide=false
+                }
+                if((row to col) == (0 to 7))
+                {
+                    board.castlingRights.blackKingSide=false
+                }
+                if((row to col) == (7 to 0))
+                {
+                    board.castlingRights.whiteQueenSide=false
+                }
+                if((row to col) == (7 to 7))
+                {
+                    board.castlingRights.whiteKingSide=false
+                }
+                if((row to col) == (0 to 4))
+                {
+                    board.castlingRights.blackKingSide=false
+                    board.castlingRights.blackQueenSide=false
+                }
+                if((row to col) == (7 to 4))
+                {
+                    board.castlingRights.whiteKingSide=false
+                    board.castlingRights.whiteQueenSide=false
+                }
 
-                newBoard.set(row, col, movingPiece)
-                newBoard.set(fromRow, fromCol, null)
 
-                board = newBoard
+                val tempBoard = board.copy()
+
+                if (movingPiece!!.type == Piece.KING && Math.abs(fromCol - col) == 2)
+                {
+                    tempBoard.grid[fromRow][fromCol] = null;
+                    tempBoard.grid[row][col] = movingPiece;
+
+                    if (col < fromCol)
+                    {
+                        tempBoard.grid[fromRow][col + 1] = tempBoard.grid[fromRow][0];
+                        tempBoard.grid[fromRow][0] = null
+                    }
+                    else
+                    {
+                        tempBoard.grid[fromRow][col - 1] = tempBoard.grid[fromRow][7];
+                        tempBoard.grid[fromRow][7] = null
+                    }
+                }
+                else
+                {
+                    tempBoard.set(row, col, movingPiece)
+                    tempBoard.set(fromRow, fromCol, null)
+                }
+
+                board = tempBoard
 
                 if (checkPromotionConditions(movingPiece!!,row, col))
                 {
