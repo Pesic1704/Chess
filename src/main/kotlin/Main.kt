@@ -18,8 +18,8 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.*
 import androidx.compose.material3.*
 
-fun main() = application{
-
+fun main() = application()
+{
     val game = remember { Game().apply { init() } }
 
     Window(onCloseRequest = ::exitApplication, title = "Chess")
@@ -152,10 +152,9 @@ fun App(game: Game)
                 }
             }
 
-            //  TODO promotionSquare check
-            if(false)
+            if(game.promotionSquare != null)
             {
-                promotionDialog()
+                promotionDialog(game)
             }
         }
     }
@@ -290,7 +289,7 @@ fun topBarItems(game: Game)
     )
     {
 
-        TimerBox(
+        timerBox(
             label = "White",
             minutes = game.timeLeftWhite / 60,
             seconds = game.timeLeftWhite % 60,
@@ -304,7 +303,7 @@ fun topBarItems(game: Game)
             styledButton("RESIGN GAME",{game.resignGame()})
         }
 
-        TimerBox(
+        timerBox(
             label = "Black",
             minutes = game.timeLeftBlack / 60,
             seconds = game.timeLeftBlack % 60,
@@ -315,7 +314,33 @@ fun topBarItems(game: Game)
 }
 
 @Composable
-fun TimerBox(
+fun gameInfoText(game : Game)
+{
+    Row()
+    {
+        if (game.gameState != GameState.PLAYING)
+        {
+            Text(
+                text = game.message,
+                color = Color.Red,
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+        else
+        {
+            Text(
+                text = if (game.playerOnTurn == Player.WHITE)
+                    "White to move"
+                else
+                    "Black to move",
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+    }
+}
+
+@Composable
+fun timerBox(
     label: String,
     minutes: Int,
     seconds: Int,
@@ -375,7 +400,7 @@ fun styledButton(
 }
 
 @Composable
-fun promotionDialog()
+fun promotionDialog(game: Game)
 {
     Dialog(
         onDismissRequest = {},
@@ -406,35 +431,14 @@ fun promotionDialog()
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // TODO PROMOTION
+                getPromotionPieces().forEach{
+                    styledButton(it.getSymbol() + " " + it.getLabel())
+                    {
+                        game.pawnPromotion(it)
+                    }
+                }
 
             }
-        }
-    }
-}
-
-@Composable
-fun gameInfoText(game : Game)
-{
-    Row()
-    {
-        if (game.gameState != GameState.PLAYING)
-        {
-            Text(
-                text = game.message,
-                color = Color.Red,
-                style = MaterialTheme.typography.headlineMedium
-            )
-        }
-        else
-        {
-            Text(
-                text = if (game.playerOnTurn == Player.WHITE)
-                            "White to move"
-                        else
-                            "Black to move",
-                style = MaterialTheme.typography.headlineMedium
-            )
         }
     }
 }

@@ -22,7 +22,6 @@ class CheckValidator(private val board: Board)
 
         return false
     }
-
     fun isPieceGivingCheck(row: Int, col: Int): Boolean
     {
         val piece = board.grid[row][col] ?: return false
@@ -37,7 +36,6 @@ class CheckValidator(private val board: Board)
 
         return kingPos in moves
     }
-
     fun isOpponentCheckmatedByPlayer(player: Player): Boolean
     {
         val opponent = if (player == Player.WHITE) Player.BLACK else Player.WHITE
@@ -94,7 +92,6 @@ class CheckValidator(private val board: Board)
 
         return true
     }
-
     fun isDraw(): Boolean
     {
         // TODO 3-fold repetition, 50 move rule
@@ -106,7 +103,6 @@ class CheckValidator(private val board: Board)
 
         return false
     }
-
     fun isInsufficientMaterial(): Boolean
     {
         val pieces = mutableListOf< Pair<ChessPiece, Pair<Int,Int>> >()

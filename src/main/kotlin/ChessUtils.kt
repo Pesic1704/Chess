@@ -1,4 +1,4 @@
-fun findKing(board: Board,player: Player) : Pair<Int, Int>?
+fun findKing(board: Board, player: Player) : Pair<Int, Int>?
 {
     var piece:ChessPiece?
 
@@ -31,4 +31,9 @@ fun whoWon(player: Player?): String
         Player.WHITE -> "WHITE WON!"
         Player.BLACK -> "BLACK WON!"
     }
+}
+
+fun getPromotionPieces(): List<Piece>
+{
+    return arrayListOf(Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN)
 }

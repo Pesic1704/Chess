@@ -54,7 +54,6 @@ class MoveValidator(private val board: Board)
         }
     }
 
-
     fun getRookMoves( row: Int, col: Int): MoveOptions
     {
         val moves = mutableListOf<Pair<Pair<Int, Int>, Int>> ()

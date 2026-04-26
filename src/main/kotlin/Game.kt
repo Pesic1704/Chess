@@ -32,6 +32,8 @@ class Game
     private var timerJob: Job? = null
     private val gameScope = CoroutineScope(Dispatchers.Default)
 
+    var promotionSquare by mutableStateOf<Pair<Int, Int>?>(null)
+    var pendingPromotionPlayer by mutableStateOf<Player?>(null)
 
     fun init()
     {
@@ -82,7 +84,7 @@ class Game
 
                 }
 
-                //TODO en passant,castling,pawn promotion,hystory
+                //TODO en passant,castling,hystory
 
                 val newBoard = board.copy()
 
@@ -90,6 +92,13 @@ class Game
                 newBoard.set(fromRow, fromCol, null)
 
                 board = newBoard
+
+                if (checkPromotionConditions(movingPiece!!,row, col))
+                {
+                    promotionSquare = row to col
+                    pendingPromotionPlayer = movingPiece.player
+                    return
+                }
 
                 evaluateCheck(playerOnTurn)
                 evaluateEndConditions(playerOnTurn)
@@ -99,7 +108,6 @@ class Game
 
             selectedStartSquare = null
             isEndSquareSelected = false
-
             moveOptions=MoveOptions(emptyList(),emptyList())
         }
     }
@@ -130,17 +138,7 @@ class Game
             moveOptions=validator.getLegalMoves(row, col)
         }
     }
-    fun switchPlayerOnTurn()
-    {
-        if(playerOnTurn == Player.WHITE)
-        {
-            playerOnTurn = Player.BLACK
-        }
-        else
-        {
-            playerOnTurn = Player.WHITE
-        }
-    }
+
     fun evaluateCheck(player: Player)
     {
         val validator = CheckValidator(board)
@@ -185,6 +183,17 @@ class Game
             timerJob?.cancel()
         }
     }
+    fun switchPlayerOnTurn()
+    {
+        if(playerOnTurn == Player.WHITE)
+        {
+            playerOnTurn = Player.BLACK
+        }
+        else
+        {
+            playerOnTurn = Player.WHITE
+        }
+    }
 
     fun startTimer()
     {
@@ -224,5 +233,31 @@ class Game
                 }
             }
         }
+    }
+
+    fun checkPromotionConditions(movingPiece: ChessPiece,row:Int,col:Int):Boolean
+    {
+        return movingPiece.type == Piece.PAWN &&
+                ((movingPiece.player == Player.WHITE && row == 0) || (movingPiece.player == Player.BLACK && row == 7))
+    }
+    fun pawnPromotion(pieceType: Piece)
+    {
+        val (row, col) = promotionSquare!!
+
+        val newBoard = board.copy()
+        newBoard.set(row, col, ChessPiece(pieceType, pendingPromotionPlayer!!) )
+        board = newBoard
+
+        evaluateCheck(pendingPromotionPlayer!!)
+        evaluateEndConditions(pendingPromotionPlayer!!)
+
+        switchPlayerOnTurn()
+
+        promotionSquare = null
+        pendingPromotionPlayer = null
+
+        selectedStartSquare = null
+        isEndSquareSelected = false
+        moveOptions=MoveOptions(emptyList(),emptyList())
     }
 }
