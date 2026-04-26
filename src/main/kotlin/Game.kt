@@ -16,7 +16,7 @@ class Game
     var checkState by mutableStateOf(CheckState(false, null))
 
     var selectedStartSquare by mutableStateOf<Pair<Int, Int>?>(null)
-    var selectedEndSquare by mutableStateOf<Pair<Int, Int>?>(null)
+    var isEndSquareSelected by mutableStateOf<Boolean>(false)
 
     var moveOptions by mutableStateOf(MoveOptions(emptyList(), emptyList()))
     var capturedPieces by mutableStateOf(listOf<ChessPiece>())
@@ -36,15 +36,17 @@ class Game
 
         squareSelection(row, col)
 
-        if( selectedEndSquare != null )
+        if( isEndSquareSelected )
         {
-            val validator= MoveValidator(board)
-            moveOptions=validator.getLegalMoves(row, col)
 
             val (fromRow, fromCol) = selectedStartSquare ?: return
-            val (row, col) = selectedEndSquare ?: return
 
-            if (row to col in moveOptions.moves.map{it.first})
+            val validator= MoveValidator(board)
+            moveOptions=validator.getLegalMoves(fromRow, fromCol)
+
+            val legalMoves = moveOptions.moves.map { it.first }.toSet()
+
+            if (row to col in legalMoves)
             {
                 val movingPiece = board.grid[fromRow][fromCol]
                 val capturedPiece = board.grid[row][col]
@@ -58,10 +60,12 @@ class Game
 
                 //TODO en passant,castling,pawn promotion,hystory
 
-                board.set(row,col,movingPiece)
-                board.set(fromRow,fromCol,null)
+                val newBoard = board.copy()
 
+                newBoard.set(row, col, movingPiece)
+                newBoard.set(fromRow, fromCol, null)
 
+                board = newBoard
 
                 evaluateEndConditions(playerOnTurn)
 
@@ -74,11 +78,10 @@ class Game
                     playerOnTurn = Player.WHITE
                 }
 
-                board=board.copy()
             }
 
             selectedStartSquare = null
-            selectedEndSquare = null
+            isEndSquareSelected = false
 
             moveOptions=MoveOptions(emptyList(),emptyList())
         }
@@ -95,9 +98,9 @@ class Game
                 selectedStartSquare = row to col
             }
         }
-        else if( piece != null && piece.player != playerOnTurn)
+        else if( piece == null || piece.player != playerOnTurn)
         {
-            selectedEndSquare = row to col
+            isEndSquareSelected = true
         }
         else
         {

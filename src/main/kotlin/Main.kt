@@ -19,8 +19,7 @@ import androidx.compose.material3.*
 
 fun main() = application{
 
-    val game = Game()
-    game.init()
+    val game = remember { Game().apply { init() } }
 
     Window(onCloseRequest = ::exitApplication, title = "Chess")
     {
@@ -187,7 +186,8 @@ fun ChessBoard(
                         Row {
                             for (col in 0..7) {
 
-                                val piece = game.board.grid[row][col]
+                                val board=game.board
+                                val piece = board.grid[row][col]
                                 val isWhiteSquare = (row + col) % 2 == 0
 
                                 Box(

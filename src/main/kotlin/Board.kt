@@ -57,8 +57,13 @@ class Board
         val newBoard = Board()
 
         for (row in 0..7)
+        {
             for (col in 0..7)
-                newBoard.grid[row][col] = grid[row][col]
+            {
+                val piece = grid[row][col]
+                newBoard.grid[row][col] = piece?.copy()
+            }
+        }
 
         return newBoard
     }
