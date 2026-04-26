@@ -113,17 +113,17 @@ class Game
 
         if (validator.isOpponentCheckmatedByPlayer(player))
         {
-            message = "CHECKMATE!"
+            message = "CHECKMATE!" + whoWon(player)
             gameState = GameState.CHECKMATE
         }
         else if (validator.isStalemateCausedByPlayer(player))
         {
-            message = "STALEMATE!"
+            message = "STALEMATE!" + whoWon(null)
             gameState = GameState.STALEMATE
         }
         else if (validator.isDraw())
         {
-            message = "DRAW!"
+            message = "DRAW!" + whoWon(null)
             gameState = GameState.DRAW
         }
         else

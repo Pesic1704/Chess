@@ -29,8 +29,8 @@ fun main() = application{
 }
 
 @Composable
-fun App(game: Game) {
-
+fun App(game: Game)
+{
     val hScroll = rememberScrollState()
     val vScroll = rememberScrollState()
 
@@ -100,7 +100,8 @@ fun App(game: Game) {
             )
             {
 
-                Column{
+                Column()
+                {
                     Text(
                         "White captures",
                         style = commonTextStyle
@@ -111,8 +112,9 @@ fun App(game: Game) {
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Column {
-                    gameGameInfoText()
+                Column()
+                {
+                    GameInfoText(game)
 
                     Box(
                         modifier = Modifier
@@ -129,7 +131,8 @@ fun App(game: Game) {
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Column {
+                Column()
+                {
                     Text(
                         "Black captures",
                         style = commonTextStyle
@@ -321,7 +324,8 @@ fun TimerBox(
         modifier = Modifier
             .background(background, RoundedCornerShape(10.dp))
             .padding(horizontal = 14.dp, vertical = 8.dp)
-    ) {
+    )
+    {
         Text(
             text = label,
             fontSize = 12.sp,
@@ -353,7 +357,8 @@ fun styledButton(
             containerColor = Color(0xFF31302E),
             contentColor = Color.White
         )
-    ) {
+    )
+    {
         Text(
             text = label,
             style = TextStyle(
@@ -405,15 +410,27 @@ fun promotionDialog()
 }
 
 @Composable
-fun gameGameInfoText()
+fun GameInfoText(game : Game)
 {
-    Row {
-        Text(
-
-            //TODO LABEL
-
-            text = "White to move",
-            style = MaterialTheme.typography.headlineMedium
-        )
+    Row()
+    {
+        if (game.gameState != GameState.PLAYING)
+        {
+            Text(
+                text = game.message,
+                color = Color.Red,
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+        else
+        {
+            Text(
+                text = if (game.playerOnTurn == Player.WHITE)
+                            "White to move  "
+                        else
+                            "Black to move ",
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
     }
 }
