@@ -35,6 +35,11 @@ data class MoveOptions(
     val captures: List<Pair<Int, Int>>
 )
 
+data class CheckState(
+    val isCheck: Boolean,
+    val kingPosition: Pair<Int, Int>?
+)
+
 enum class GameState
 {
     PLAYING,
@@ -44,11 +49,6 @@ enum class GameState
     DRAW,
     TIMEOUT
 }
-
-data class CheckState(
-    val isCheck: Boolean,
-    val kingPosition: Pair<Int, Int>?
-)
 
 data class CastlingRights(
     var whiteKingSide: Boolean,

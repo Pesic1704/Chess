@@ -320,7 +320,7 @@ class MoveValidator(private val board: Board)
             }
         }
 
-        var startRow = if (piece.player == Player.WHITE) 7 else 0
+        val startRow = if (piece.player == Player.WHITE) 7 else 0
 
         if(piece.player == Player.WHITE)
         {
@@ -356,8 +356,6 @@ class MoveValidator(private val board: Board)
                 }
             }
         }
-
-
 
         return MoveOptions(moves.toList(),captures.toList())
     }

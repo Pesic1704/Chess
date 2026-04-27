@@ -16,14 +16,14 @@ class Game
 {
     var board by mutableStateOf(Board())
 
-    var message by mutableStateOf<String>("")
+    var message by mutableStateOf("")
     var playerOnTurn by mutableStateOf(Player.WHITE)
 
     var gameState by mutableStateOf(GameState.PLAYING)
     var checkState by mutableStateOf(CheckState(false, null))
 
     var selectedStartSquare by mutableStateOf<Pair<Int, Int>?>(null)
-    var isEndSquareSelected by mutableStateOf<Boolean>(false)
+    private var isEndSquareSelected by mutableStateOf(false)
 
     var moveOptions by mutableStateOf(MoveOptions(emptyList(), emptyList()))
     var capturedPieces by mutableStateOf(listOf<ChessPiece>())
@@ -37,9 +37,9 @@ class Game
     var promotionSquare by mutableStateOf<Pair<Int, Int>?>(null)
     var pendingPromotionPlayer by mutableStateOf<Player?>(null)
 
-    val boardStateHistory = mutableMapOf<Long,Int>()
-    var lastBoardState: Long? = null
-    var fiftyMoveCounter:Int = 0
+    private val boardStateHistory = mutableMapOf<Long,Int>()
+    private var lastBoardState: Long? = null
+    private var fiftyMoveCounter:Int = 0
 
     fun init()
     {
@@ -87,14 +87,11 @@ class Game
 
         timerJob?.cancel()
 
-        if(playerOnTurn == Player.WHITE)
-        {
-            message = "RESIGNED!" + "   " + whoWon(Player.BLACK)
-        }
-        else
-        {
-            message = "RESIGNED!" + "   " + whoWon(Player.WHITE)
-        }
+        message = "RESIGNED!" + "   " + if(playerOnTurn == Player.WHITE)
+                                             whoWon(Player.BLACK)
+                                        else
+                                             whoWon(Player.WHITE)
+
     }
 
     fun onSquareClick(row: Int, col: Int)
@@ -114,29 +111,29 @@ class Game
             {
                 val movingPiece = board.grid[fromRow][fromCol]
 
-                //TODO hystory
+                //TODO history
 
                 val tempBoard = board.copy()
 
                 if (movingPiece!!.type == Piece.KING && abs(fromCol - toCol) == 2)
                 {
-                    tempBoard.grid[fromRow][fromCol] = null;
-                    tempBoard.grid[toRow][toCol] = movingPiece;
+                    tempBoard.grid[fromRow][fromCol] = null
+                    tempBoard.grid[toRow][toCol] = movingPiece
 
                     if (toCol < fromCol)
                     {
-                        tempBoard.grid[fromRow][toCol + 1] = tempBoard.grid[fromRow][0];
+                        tempBoard.grid[fromRow][toCol + 1] = tempBoard.grid[fromRow][0]
                         tempBoard.grid[fromRow][0] = null
                     }
                     else
                     {
-                        tempBoard.grid[fromRow][toCol - 1] = tempBoard.grid[fromRow][7];
+                        tempBoard.grid[fromRow][toCol - 1] = tempBoard.grid[fromRow][7]
                         tempBoard.grid[fromRow][7] = null
                     }
 
                     fiftyMoveCounter++
                 }
-                else if(movingPiece!!.type == Piece.PAWN && (toRow to toCol) == tempBoard.enPassantTarget)
+                else if(movingPiece.type == Piece.PAWN && (toRow to toCol) == tempBoard.enPassantTarget)
                 {
                     val capturedPiece = tempBoard.grid[fromRow][toCol]!!
                     capturedPieces += capturedPiece
@@ -192,7 +189,7 @@ class Game
                     tempBoard.castlingRights.whiteQueenSide=false
                 }
 
-                if(movingPiece!!.type == Piece.PAWN && abs(toRow - fromRow) == 2)
+                if(movingPiece.type == Piece.PAWN && abs(toRow - fromRow) == 2)
                 {
                     tempBoard.enPassantTarget=((fromRow + toRow)/2) to toCol
                 }
@@ -206,7 +203,7 @@ class Game
                 lastBoardState = calculateBoardStateHash()
                 boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
 
-                if (checkPromotionConditions(movingPiece!!,toRow, toCol))
+                if (checkPromotionConditions(movingPiece,toRow))
                 {
                     promotionSquare = toRow to toCol
                     pendingPromotionPlayer = movingPiece.player
@@ -300,14 +297,10 @@ class Game
 
     fun switchPlayerOnTurn()
     {
-        if(playerOnTurn == Player.WHITE)
-        {
-            playerOnTurn = Player.BLACK
-        }
-        else
-        {
-            playerOnTurn = Player.WHITE
-        }
+        playerOnTurn = if (playerOnTurn == Player.WHITE)
+                            Player.BLACK
+                        else
+                            Player.WHITE
     }
 
     fun startTimer()
@@ -350,7 +343,7 @@ class Game
         }
     }
 
-    fun checkPromotionConditions(movingPiece: ChessPiece,row:Int,col:Int):Boolean
+    fun checkPromotionConditions(movingPiece: ChessPiece,row:Int):Boolean
     {
         return movingPiece.type == Piece.PAWN &&
                 ((movingPiece.player == Player.WHITE && row == 0) || (movingPiece.player == Player.BLACK && row == 7))

@@ -85,7 +85,7 @@ fun App(game: Game)
                         .weight(1f, fill = false)
                 )
                 {
-                    // TODO HYSTORY
+                    // TODO HISTORY
                 }
             }
 
@@ -299,8 +299,8 @@ fun topBarItems(game: Game)
 
         Row()
         {
-            styledButton("RESTART GAME",{game.restartGame()})
-            styledButton("RESIGN GAME",{game.resignGame()})
+            styledButton("RESTART GAME") { game.restartGame() }
+            styledButton("RESIGN GAME") { game.resignGame() }
         }
 
         timerBox(

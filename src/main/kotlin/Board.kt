@@ -1,7 +1,7 @@
 class Board
 {
     val grid = Array(8) { arrayOfNulls<ChessPiece?>(8) }
-    var castlingRights = CastlingRights(true,true,true,true)
+    var castlingRights = CastlingRights(whiteKingSide=true, whiteQueenSide=true, blackKingSide = true, blackQueenSide = true)
     var enPassantTarget: Pair<Int, Int>? = null
 
     fun get(row: Int, col: Int) = grid[row][col]

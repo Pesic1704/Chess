@@ -1,6 +1,3 @@
-import kotlin.collections.plus
-import kotlin.math.abs
-
 fun findKing(board: Board, player: Player) : Pair<Int, Int>?
 {
     var piece:ChessPiece?
