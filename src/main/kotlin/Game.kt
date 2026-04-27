@@ -37,8 +37,8 @@ class Game
     var promotionSquare by mutableStateOf<Pair<Int, Int>?>(null)
     var pendingPromotionPlayer by mutableStateOf<Player?>(null)
 
-    private val boardStateHistory = mutableMapOf<Long,Int>()
     private var lastBoardState: Long? = null
+    private val boardStateHistory = mutableMapOf<Long,Int>()
     private var fiftyMoveCounter:Int = 0
 
     fun init()
@@ -151,11 +151,15 @@ class Game
                     if(capturedPiece != null)
                     {
                         capturedPieces += capturedPiece
-                        fiftyMoveCounter++
+                        fiftyMoveCounter=0
+                    }
+                    else if(movingPiece.type == Piece.PAWN )
+                    {
+                        fiftyMoveCounter=0
                     }
                     else
                     {
-                        fiftyMoveCounter = 0
+                        fiftyMoveCounter++
                     }
 
                     tempBoard.set(toRow, toCol, movingPiece)
@@ -200,15 +204,15 @@ class Game
 
                 board = tempBoard
 
-                lastBoardState = calculateBoardStateHash()
-                boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
-
                 if (checkPromotionConditions(movingPiece,toRow))
                 {
                     promotionSquare = toRow to toCol
                     pendingPromotionPlayer = movingPiece.player
                     return
                 }
+
+                lastBoardState = calculateBoardStateHash()
+                boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
 
                 evaluateCheck(playerOnTurn)
                 evaluateEndConditions(playerOnTurn)
@@ -352,9 +356,12 @@ class Game
     {
         val (row, col) = promotionSquare!!
 
-        val newBoard = board.copy()
-        newBoard.set(row, col, ChessPiece(pieceType, pendingPromotionPlayer!!) )
-        board = newBoard
+        val tempBoard = board.copy()
+        tempBoard.set(row, col, ChessPiece(pieceType, pendingPromotionPlayer!!) )
+        board = tempBoard
+
+        lastBoardState = calculateBoardStateHash()
+        boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
 
         evaluateCheck(pendingPromotionPlayer!!)
         evaluateEndConditions(pendingPromotionPlayer!!)
