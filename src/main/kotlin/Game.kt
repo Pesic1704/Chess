@@ -148,61 +148,23 @@ class Game
 
             if (toRow to toCol in legalMoves)
             {
-                val movingPiece = board.grid[fromRow][fromCol]
+                val movingPiece = board.grid[fromRow][fromCol] ?:return
 
                 //TODO history
 
                 val tempBoard = board.copy()
 
-                if (movingPiece!!.type == Piece.KING && abs(fromCol - toCol) == 2)
+                if (movingPiece.type == Piece.KING && abs(fromCol - toCol) == 2)
                 {
-                    tempBoard.grid[fromRow][fromCol] = null
-                    tempBoard.grid[toRow][toCol] = movingPiece
-
-                    if (toCol < fromCol)
-                    {
-                        tempBoard.grid[fromRow][toCol + 1] = tempBoard.grid[fromRow][0]
-                        tempBoard.grid[fromRow][0] = null
-                    }
-                    else
-                    {
-                        tempBoard.grid[fromRow][toCol - 1] = tempBoard.grid[fromRow][7]
-                        tempBoard.grid[fromRow][7] = null
-                    }
-
-                    fiftyMoveCounter++
+                    executeCastling(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
                 }
                 else if(movingPiece.type == Piece.PAWN && (toRow to toCol) == tempBoard.enPassantTarget)
                 {
-                    val capturedPiece = tempBoard.grid[fromRow][toCol]!!
-                    capturedPieces += capturedPiece
-
-                    tempBoard.grid[toRow][toCol] = movingPiece
-                    tempBoard.grid[fromRow][fromCol] = null
-                    tempBoard.grid[fromRow][toCol] = null
-
-                    fiftyMoveCounter = 0
+                    executeEnPassant(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
                 }
                 else
                 {
-                    val capturedPiece = tempBoard.grid[toRow][toCol]
-
-                    if(capturedPiece != null)
-                    {
-                        capturedPieces += capturedPiece
-                        fiftyMoveCounter=0
-                    }
-                    else if(movingPiece.type == Piece.PAWN )
-                    {
-                        fiftyMoveCounter=0
-                    }
-                    else
-                    {
-                        fiftyMoveCounter++
-                    }
-
-                    tempBoard.set(toRow, toCol, movingPiece)
-                    tempBoard.set(fromRow, fromCol, null)
+                    executeNormalMove(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
                 }
 
                 updateCastlingRights(tempBoard,fromRow,fromCol,toRow,toCol)
@@ -259,6 +221,57 @@ class Game
         }
     }
 
+    fun executeCastling(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
+    {
+        board.grid[fromRow][fromCol] = null
+        board.grid[toRow][toCol] = movingPiece
+
+        if (toCol < fromCol)
+        {
+            board.grid[fromRow][toCol + 1] = board.grid[fromRow][0]
+            board.grid[fromRow][0] = null
+        }
+        else
+        {
+            board.grid[fromRow][toCol - 1] = board.grid[fromRow][7]
+            board.grid[fromRow][7] = null
+        }
+
+        fiftyMoveCounter++
+    }
+    fun executeEnPassant(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
+    {
+        val capturedPiece = board.grid[fromRow][toCol]!!
+        capturedPieces += capturedPiece
+
+        board.grid[toRow][toCol] = movingPiece
+        board.grid[fromRow][fromCol] = null
+        board.grid[fromRow][toCol] = null
+
+        fiftyMoveCounter = 0
+    }
+    fun executeNormalMove(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
+    {
+        val capturedPiece = board.grid[toRow][toCol]
+
+        if (capturedPiece != null)
+        {
+            capturedPieces += capturedPiece
+            fiftyMoveCounter = 0
+        }
+        else if (movingPiece.type == Piece.PAWN)
+        {
+            fiftyMoveCounter = 0
+        }
+        else
+        {
+            fiftyMoveCounter++
+        }
+
+        board.grid[toRow][toCol] = movingPiece
+        board.grid[fromRow][fromCol] = null
+    }
+
     fun updateCastlingRights(board: Board, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
     {
         if (fromRow == CastlingSquare.WHITE_KING.row && fromCol == CastlingSquare.WHITE_KING.col)
@@ -304,6 +317,68 @@ class Game
         {
             board.enPassantTarget= null
         }
+    }
+
+    fun checkPromotionConditions(movingPiece: ChessPiece,row:Int):Boolean
+    {
+        return movingPiece.type == Piece.PAWN &&
+                ((movingPiece.player == Player.WHITE && row == 0) || (movingPiece.player == Player.BLACK && row == 7))
+    }
+    fun pawnPromotion(pieceType: Piece)
+    {
+        val (row, col) = promotionSquare!!
+
+        val tempBoard = board.copy()
+        tempBoard.grid[row][col]= ChessPiece(pieceType, pendingPromotionPlayer!!)
+        board = tempBoard
+
+        lastBoardState = calculateBoardStateHash()
+        boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
+
+        evaluateCheck(pendingPromotionPlayer!!)
+        evaluateEndConditions(pendingPromotionPlayer!!)
+
+        switchPlayerOnTurn()
+
+        promotionSquare = null
+        pendingPromotionPlayer = null
+
+        selectedStartSquare = null
+        isEndSquareSelected = false
+        moveOptions=MoveOptions(emptyList(),emptyList())
+    }
+
+    fun calculateBoardStateHash(): Long
+    {
+        var hash: Long = 1
+
+        for (i in 0..7)
+        {
+            for (j in 0..7)
+            {
+                val piece = board.grid[i][j]
+                val pieceValue = if (piece == null)
+                    0
+                else
+                    (if (piece.player == Player.WHITE) 1 else 7) + piece.type.ordinal
+                hash = 31 * hash + pieceValue
+            }
+        }
+
+        hash = 31 * hash + if (board.castlingRights.whiteKingSide) 1 else 0
+        hash = 31 * hash + if (board.castlingRights.whiteQueenSide) 1 else 0
+        hash = 31 * hash + if (board.castlingRights.blackKingSide) 1 else 0
+        hash = 31 * hash + if (board.castlingRights.blackQueenSide) 1 else 0
+
+        if (board.enPassantTarget != null)
+        {
+            hash = 31 * hash + board.enPassantTarget!!.first
+            hash = 31 * hash + board.enPassantTarget!!.second
+        }
+
+        hash = 31 * hash + (if (playerOnTurn == Player.WHITE) 1 else 0)
+
+        return hash
     }
 
     fun evaluateCheck(player: Player)
@@ -359,67 +434,4 @@ class Game
                         else
                             Player.WHITE
     }
-
-    fun checkPromotionConditions(movingPiece: ChessPiece,row:Int):Boolean
-    {
-        return movingPiece.type == Piece.PAWN &&
-                ((movingPiece.player == Player.WHITE && row == 0) || (movingPiece.player == Player.BLACK && row == 7))
-    }
-    fun pawnPromotion(pieceType: Piece)
-    {
-        val (row, col) = promotionSquare!!
-
-        val tempBoard = board.copy()
-        tempBoard.set(row, col, ChessPiece(pieceType, pendingPromotionPlayer!!) )
-        board = tempBoard
-
-        lastBoardState = calculateBoardStateHash()
-        boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
-
-        evaluateCheck(pendingPromotionPlayer!!)
-        evaluateEndConditions(pendingPromotionPlayer!!)
-
-        switchPlayerOnTurn()
-
-        promotionSquare = null
-        pendingPromotionPlayer = null
-
-        selectedStartSquare = null
-        isEndSquareSelected = false
-        moveOptions=MoveOptions(emptyList(),emptyList())
-    }
-
-    fun calculateBoardStateHash(): Long
-    {
-        var hash: Long = 1
-
-        for (i in 0..7)
-        {
-            for (j in 0..7)
-            {
-                val piece = board.grid[i][j]
-                val pieceValue = if (piece == null)
-                                    0
-                                else
-                                    (if (piece.player == Player.WHITE) 1 else 7) + piece.type.ordinal
-                hash = 31 * hash + pieceValue
-            }
-        }
-
-        hash = 31 * hash + if (board.castlingRights.whiteKingSide) 1 else 0
-        hash = 31 * hash + if (board.castlingRights.whiteQueenSide) 1 else 0
-        hash = 31 * hash + if (board.castlingRights.blackKingSide) 1 else 0
-        hash = 31 * hash + if (board.castlingRights.blackQueenSide) 1 else 0
-
-        if (board.enPassantTarget != null)
-        {
-            hash = 31 * hash + board.enPassantTarget!!.first
-            hash = 31 * hash + board.enPassantTarget!!.second
-        }
-
-        hash = 31 * hash + (if (playerOnTurn == Player.WHITE) 1 else 0)
-
-        return hash
-    }
-
 }
