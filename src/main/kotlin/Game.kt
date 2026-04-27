@@ -9,12 +9,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.isActive
-import kotlin.collections.plus
-import kotlin.div
 import kotlin.math.abs
-import kotlin.text.compareTo
-import kotlin.text.get
-import kotlin.text.set
 
 
 class Game
@@ -40,6 +35,10 @@ class Game
 
     var promotionSquare by mutableStateOf<Pair<Int, Int>?>(null)
     var pendingPromotionPlayer by mutableStateOf<Player?>(null)
+
+    val boardStateHistory = mutableMapOf<Long,Int>()
+    var lastBoardState: Long? = null
+    var fiftyMoveCounter:Int = 0
 
     fun init()
     {
@@ -103,6 +102,8 @@ class Game
                         tempBoard.grid[fromRow][toCol - 1] = tempBoard.grid[fromRow][7];
                         tempBoard.grid[fromRow][7] = null
                     }
+
+                    fiftyMoveCounter++
                 }
                 else if(movingPiece!!.type == Piece.PAWN && (toRow to toCol) == tempBoard.enPassantTarget)
                 {
@@ -112,13 +113,21 @@ class Game
                     tempBoard.grid[toRow][toCol] = movingPiece
                     tempBoard.grid[fromRow][fromCol] = null
                     tempBoard.grid[fromRow][toCol] = null
+
+                    fiftyMoveCounter = 0
                 }
                 else
                 {
                     val capturedPiece = tempBoard.grid[toRow][toCol]
+
                     if(capturedPiece != null)
                     {
                         capturedPieces += capturedPiece
+                        fiftyMoveCounter++
+                    }
+                    else
+                    {
+                        fiftyMoveCounter = 0
                     }
 
                     tempBoard.set(toRow, toCol, movingPiece)
@@ -163,6 +172,8 @@ class Game
 
                 board = tempBoard
 
+                val lastBoardState = calculateBoardStateHash()
+                boardStateHistory[lastBoardState] = (boardStateHistory[lastBoardState] ?: 0) + 1
 
                 if (checkPromotionConditions(movingPiece!!,toRow, toCol))
                 {
@@ -226,19 +237,20 @@ class Game
     }
     fun evaluateEndConditions(player: Player)
     {
-        val validator = CheckValidator(board)
+        val checkValidator = CheckValidator(board)
+        val drawValidator = DrawValidator(board,lastBoardState!!,boardStateHistory,fiftyMoveCounter)
 
-        if (validator.isOpponentCheckmatedByPlayer(player))
+        if (checkValidator.isOpponentCheckmatedByPlayer(player))
         {
             message = "CHECKMATE!" + "  " + whoWon(player)
             gameState = GameState.CHECKMATE
         }
-        else if (validator.isStalemateCausedByPlayer(player))
+        else if (checkValidator.isStalemateCausedByPlayer(player))
         {
             message = "STALEMATE!" + "  " + whoWon(null)
             gameState = GameState.STALEMATE
         }
-        else if (validator.isDraw())
+        else if (drawValidator.isDraw())
         {
             message = "DRAW!" + "  " + whoWon(null)
             gameState = GameState.DRAW
@@ -254,6 +266,7 @@ class Game
             timerJob?.cancel()
         }
     }
+
     fun switchPlayerOnTurn()
     {
         if(playerOnTurn == Player.WHITE)
@@ -331,4 +344,38 @@ class Game
         isEndSquareSelected = false
         moveOptions=MoveOptions(emptyList(),emptyList())
     }
+
+    fun calculateBoardStateHash(): Long
+    {
+        var hash: Long = 1
+
+        for (i in 0..7)
+        {
+            for (j in 0..7)
+            {
+                val piece = board.grid[i][j]
+                val pieceValue = if (piece == null)
+                                    0
+                                else
+                                    (if (piece.player == Player.WHITE) 1 else 7) + piece.type.ordinal
+                hash = 31 * hash + pieceValue
+            }
+        }
+
+        hash = 31 * hash + if (board.castlingRights.whiteKingSide) 1 else 0
+        hash = 31 * hash + if (board.castlingRights.whiteQueenSide) 1 else 0
+        hash = 31 * hash + if (board.castlingRights.blackKingSide) 1 else 0
+        hash = 31 * hash + if (board.castlingRights.blackQueenSide) 1 else 0
+
+        if (board.enPassantTarget != null)
+        {
+            hash = 31 * hash + board.enPassantTarget!!.first
+            hash = 31 * hash + board.enPassantTarget!!.second
+        }
+
+        hash = 31 * hash + (if (playerOnTurn == Player.WHITE) 1 else 0)
+
+        return hash
+    }
+
 }
