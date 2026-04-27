@@ -30,6 +30,7 @@ class Game
 
     var timeLeftWhite by mutableIntStateOf(900)
     var timeLeftBlack by mutableIntStateOf(900)
+
     private var timerJob: Job? = null
     private val gameScope = CoroutineScope(Dispatchers.Default)
 
@@ -42,13 +43,43 @@ class Game
 
     fun init()
     {
-        board.clear()
-        board.setUpInitialBoard()
-        board.setUpCastlingRights()
+        val tempBoard = Board()
+
+        tempBoard.clearBoard()
+        tempBoard.setUpInitialBoard()
+        tempBoard.setUpCastlingRights()
+        tempBoard.setUpEnPassantTarget()
+
+        board = tempBoard
     }
     fun restartGame()
     {
+        init()
 
+        message = ""
+        playerOnTurn = Player.WHITE
+
+        gameState = GameState.PLAYING
+        checkState = CheckState(false, null)
+
+        selectedStartSquare = null
+        isEndSquareSelected = false
+
+        moveOptions = MoveOptions(emptyList(), emptyList())
+        capturedPieces = listOf()
+
+        timeLeftWhite = 900
+        timeLeftBlack = 900
+
+        timerJob?.cancel()
+        timerJob = null
+
+        promotionSquare =null
+        pendingPromotionPlayer = null
+
+        boardStateHistory.clear()
+        lastBoardState = null
+        fiftyMoveCounter = 0
     }
     fun resignGame()
     {
@@ -172,8 +203,8 @@ class Game
 
                 board = tempBoard
 
-                val lastBoardState = calculateBoardStateHash()
-                boardStateHistory[lastBoardState] = (boardStateHistory[lastBoardState] ?: 0) + 1
+                lastBoardState = calculateBoardStateHash()
+                boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
 
                 if (checkPromotionConditions(movingPiece!!,toRow, toCol))
                 {

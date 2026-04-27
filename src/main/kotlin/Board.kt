@@ -10,7 +10,7 @@ class Board
         grid[row][col] = piece
     }
 
-    fun clear()
+    fun clearBoard()
     {
         for (row in 0..7)
             for (col in 0..7)
