@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.isActive
 import kotlin.math.abs
 
-
 class Game
 {
     var board by mutableStateOf(Board())
@@ -94,6 +93,46 @@ class Game
 
     }
 
+    fun startTimer()
+    {
+        timerJob?.cancel()
+
+        timerJob = gameScope.launch()
+        {
+            while (isActive && gameState == GameState.PLAYING)
+            {
+                delay(1000L)
+
+                if (playerOnTurn == Player.WHITE)
+                {
+                    if (timeLeftWhite > 0)
+                    {
+                        timeLeftWhite--
+                    }
+                    else
+                    {
+                        message = "TIMEOUT!" + "   " + whoWon(Player.BLACK)
+                        gameState = GameState.TIMEOUT
+                        timerJob?.cancel()
+                    }
+                }
+                else
+                {
+                    if (timeLeftBlack > 0)
+                    {
+                        timeLeftBlack--
+                    }
+                    else
+                    {
+                        message = "TIMEOUT!" + "   " + whoWon(Player.WHITE)
+                        gameState = GameState.TIMEOUT
+                        timerJob?.cancel()
+                    }
+                }
+            }
+        }
+    }
+
     fun onSquareClick(row: Int, col: Int)
     {
         if (gameState != GameState.PLAYING) return
@@ -166,41 +205,8 @@ class Game
                     tempBoard.set(fromRow, fromCol, null)
                 }
 
-                if((toRow to toCol) == (0 to 0))
-                {
-                    tempBoard.castlingRights.blackQueenSide=false
-                }
-                if((toRow to toCol) == (0 to 7))
-                {
-                    tempBoard.castlingRights.blackKingSide=false
-                }
-                if((toRow to toCol) == (7 to 0))
-                {
-                    tempBoard.castlingRights.whiteQueenSide=false
-                }
-                if((toRow to toCol) == (7 to 7))
-                {
-                    tempBoard.castlingRights.whiteKingSide=false
-                }
-                if((toRow to toCol) == (0 to 4))
-                {
-                    tempBoard.castlingRights.blackKingSide=false
-                    tempBoard.castlingRights.blackQueenSide=false
-                }
-                if((toRow to toCol) == (7 to 4))
-                {
-                    tempBoard.castlingRights.whiteKingSide=false
-                    tempBoard.castlingRights.whiteQueenSide=false
-                }
-
-                if(movingPiece.type == Piece.PAWN && abs(toRow - fromRow) == 2)
-                {
-                    tempBoard.enPassantTarget=((fromRow + toRow)/2) to toCol
-                }
-                else
-                {
-                    tempBoard.enPassantTarget= null
-                }
+                updateCastlingRights(tempBoard,fromRow,fromCol,toRow,toCol)
+                updateEnPassantTarget(tempBoard,movingPiece,fromRow,toRow,toCol)
 
                 board = tempBoard
 
@@ -250,6 +256,53 @@ class Game
 
             val validator= MoveValidator(board)
             moveOptions=validator.getLegalMoves(row, col)
+        }
+    }
+
+    fun updateCastlingRights(board: Board, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
+    {
+        if (fromRow == CastlingSquare.WHITE_KING.row && fromCol == CastlingSquare.WHITE_KING.col)
+        {
+            board.castlingRights.whiteKingSide = false
+            board.castlingRights.whiteQueenSide = false
+        }
+        if (fromRow == CastlingSquare.BLACK_KING.row && fromCol == CastlingSquare.BLACK_KING.col)
+        {
+            board.castlingRights.blackKingSide = false
+            board.castlingRights.blackQueenSide = false
+        }
+
+        if ((fromRow == CastlingSquare.WHITE_KING_ROOK.row && fromCol == CastlingSquare.WHITE_KING_ROOK.col) ||
+            (toRow == CastlingSquare.WHITE_KING_ROOK.row && toCol == CastlingSquare.WHITE_KING_ROOK.col))
+        {
+            board.castlingRights.whiteKingSide = false
+        }
+        if ((fromRow == CastlingSquare.WHITE_QUEEN_ROOK.row && fromCol == CastlingSquare.WHITE_QUEEN_ROOK.col) ||
+            (toRow == CastlingSquare.WHITE_QUEEN_ROOK.row && toCol == CastlingSquare.WHITE_QUEEN_ROOK.col))
+        {
+            board.castlingRights.whiteQueenSide = false
+        }
+
+        if ((fromRow == CastlingSquare.BLACK_KING_ROOK.row && fromCol == CastlingSquare.BLACK_KING_ROOK.col) ||
+            (toRow == CastlingSquare.BLACK_KING_ROOK.row && toCol == CastlingSquare.BLACK_KING_ROOK.col))
+        {
+            board.castlingRights.blackKingSide = false
+        }
+        if ((fromRow == CastlingSquare.BLACK_QUEEN_ROOK.row && fromCol == CastlingSquare.BLACK_QUEEN_ROOK.col) ||
+            (toRow == CastlingSquare.BLACK_QUEEN_ROOK.row && toCol == CastlingSquare.BLACK_QUEEN_ROOK.col))
+        {
+            board.castlingRights.blackQueenSide = false
+        }
+    }
+    fun updateEnPassantTarget(board: Board, movingPiece: ChessPiece, fromRow: Int, toRow: Int, toCol: Int)
+    {
+        if(movingPiece.type == Piece.PAWN && abs(toRow - fromRow) == 2)
+        {
+            board.enPassantTarget=((fromRow + toRow)/2) to toCol
+        }
+        else
+        {
+            board.enPassantTarget= null
         }
     }
 
@@ -305,46 +358,6 @@ class Game
                             Player.BLACK
                         else
                             Player.WHITE
-    }
-
-    fun startTimer()
-    {
-        timerJob?.cancel()
-
-        timerJob = gameScope.launch()
-        {
-            while (isActive && gameState == GameState.PLAYING)
-            {
-                delay(1000L)
-
-                if (playerOnTurn == Player.WHITE)
-                {
-                    if (timeLeftWhite > 0)
-                    {
-                        timeLeftWhite--
-                    }
-                    else
-                    {
-                        message = "TIMEOUT!" + "   " + whoWon(Player.BLACK)
-                        gameState = GameState.TIMEOUT
-                        timerJob?.cancel()
-                    }
-                }
-                else
-                {
-                    if (timeLeftBlack > 0)
-                    {
-                        timeLeftBlack--
-                    }
-                    else
-                    {
-                        message = "TIMEOUT!" + "   " + whoWon(Player.WHITE)
-                        gameState = GameState.TIMEOUT
-                        timerJob?.cancel()
-                    }
-                }
-            }
-        }
     }
 
     fun checkPromotionConditions(movingPiece: ChessPiece,row:Int):Boolean
