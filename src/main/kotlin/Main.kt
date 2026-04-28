@@ -89,12 +89,12 @@ fun App(game: Game)
                         .weight(1f, fill = false)
                 )
                 {
-                    game.getMovesHistoryFormated().forEachIndexed { index, moveText ->
+                    game.historyManager.getMovesHistoryFormated().forEachIndexed { index, moveText ->
                         Text(
                             text = moveText,
                             style = commonTextStyle,
                             modifier = Modifier.clickable {
-                                game.goToMove(index)
+                                game.historyManager.goToMove(index)
                             }
                         )
                     }
