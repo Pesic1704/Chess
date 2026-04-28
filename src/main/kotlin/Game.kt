@@ -79,6 +79,8 @@ class Game
         timerJob?.cancel()
         timerJob = null
 
+        startTimer()
+
         promotionSquare =null
         pendingPromotionPlayer = null
 

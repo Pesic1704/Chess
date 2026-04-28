@@ -31,6 +31,11 @@ fun main() = application()
 @Composable
 fun App(game: Game)
 {
+    LaunchedEffect(Unit)
+    {
+        game.startTimer()
+    }
+
     val hScroll = rememberScrollState()
     val vScroll = rememberScrollState()
 
@@ -52,7 +57,6 @@ fun App(game: Game)
                 .background(Color(0xFFB58863))
         )
         {
-            game.startTimer()
             topBarItems(game)
         }
 
@@ -159,12 +163,12 @@ fun App(game: Game)
                         }
                 }
             }
-
-            if(game.promotionSquare != null)
-            {
-                promotionDialog(game)
-            }
         }
+    }
+
+    if(game.promotionSquare != null)
+    {
+        promotionDialog(game)
     }
 }
 
