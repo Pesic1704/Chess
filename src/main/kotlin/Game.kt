@@ -44,6 +44,8 @@ class Game
     var moveIndex:Int = 0
     val movesHistory = mutableStateListOf<Move>()
 
+    val boardSnapshots = mutableStateListOf<Board>()
+
     fun init()
     {
         val tempBoard = Board()
@@ -86,13 +88,15 @@ class Game
 
         moveIndex = 0
         movesHistory.clear()
+
+        boardSnapshots.clear()
     }
     fun resignGame()
     {
         gameState = GameState.RESIGNED
 
         movesHistory.add(Move(
-            moveIndex,
+            -1,
             (-1 to -1),
             (-1 to -1),
             null,
@@ -134,7 +138,7 @@ class Game
                         gameState = GameState.TIMEOUT
 
                         movesHistory.add(Move(
-                            moveIndex,
+                            -1,
                             (-1 to -1),
                             (-1 to -1),
                             null,
@@ -160,7 +164,7 @@ class Game
                         gameState = GameState.TIMEOUT
 
                         movesHistory.add(Move(
-                            moveIndex,
+                            -1,
                             (-1 to -1),
                             (-1 to -1),
                             null,
@@ -216,6 +220,7 @@ class Game
                 updateEnPassantTarget(tempBoard,movingPiece,fromRow,toRow,toCol)
 
                 board = tempBoard
+                boardSnapshots.add(board.copy())
 
                 if (checkPromotionConditions(movingPiece,toRow))
                 {
@@ -442,6 +447,9 @@ class Game
         tempBoard.grid[row][col]= ChessPiece(pieceType, pendingPromotionPlayer!!)
         board = tempBoard
 
+        boardSnapshots.removeAt(boardSnapshots.lastIndex)
+        boardSnapshots.add(board.copy())
+
         val last = movesHistory.removeAt(movesHistory.lastIndex)
         val updated = last.copy(promotion = pieceType)
         movesHistory.add(updated)
@@ -542,7 +550,7 @@ class Game
         if(gameState != GameState.PLAYING)
         {
             movesHistory.add(Move(
-                moveIndex,
+                -1,
                 (-1 to -1),
                 (-1 to -1),
                 null,
@@ -635,6 +643,23 @@ class Game
 
                     text+= colToString(it.to.second) + (8-it.to.first).toString()
 
+                    if(it.movingPiece.type == Piece.PAWN && it.promotion==Piece.KNIGHT)
+                    {
+                        text += "=N"
+                    }
+                    else if(it.movingPiece.type == Piece.PAWN && it.promotion==Piece.BISHOP)
+                    {
+                        text += "=B"
+                    }
+                    else if(it.movingPiece.type == Piece.PAWN && it.promotion==Piece.ROOK)
+                    {
+                        text += "=R"
+                    }
+                    else if(it.movingPiece.type == Piece.PAWN && it.promotion==Piece.QUEEN)
+                    {
+                        text += "=Q"
+                    }
+
                 }
 
                 if(it.check)
@@ -646,5 +671,15 @@ class Game
             res.add(text)
         }
         return res
+    }
+    fun goToMove(index: Int)
+    {
+        if(gameState != GameState.PLAYING)
+        {
+            if (index in boardSnapshots.indices)
+            {
+                board = boardSnapshots[index].copy()
+            }
+        }
     }
 }
