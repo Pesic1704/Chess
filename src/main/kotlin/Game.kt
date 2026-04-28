@@ -27,20 +27,15 @@ class Game
     var moveOptions by mutableStateOf(MoveOptions(emptyList(), emptyList()))
     var capturedPieces by mutableStateOf(listOf<ChessPiece>())
 
-    var timeLeftWhite by mutableIntStateOf(900)
-    var timeLeftBlack by mutableIntStateOf(900)
-
-    private var timerJob: Job? = null
-    private val gameScope = CoroutineScope(Dispatchers.Default)
-
     var promotionSquare by mutableStateOf<Pair<Int, Int>?>(null)
     var pendingPromotionPlayer by mutableStateOf<Player?>(null)
 
-    private var lastBoardState: Long? = null
-    private val boardStateHistory = mutableMapOf<Long,Int>()
+    private var lastBoardStateHash: Long? = null
+    private val boardStateHashHistory = mutableMapOf<Long,Int>()
     private var fiftyMoveCounter:Int = 0
 
     val historyManager = HistoryManager(this)
+    val timerManager = TimerManager(this)
 
     fun init()
     {
@@ -69,22 +64,15 @@ class Game
         moveOptions = MoveOptions(emptyList(), emptyList())
         capturedPieces = listOf()
 
-        timeLeftWhite = 900
-        timeLeftBlack = 900
-
-        timerJob?.cancel()
-        timerJob = null
-
-        startTimer()
-
         promotionSquare =null
         pendingPromotionPlayer = null
 
-        boardStateHistory.clear()
-        lastBoardState = null
+        boardStateHashHistory.clear()
+        lastBoardStateHash = null
         fiftyMoveCounter = 0
 
         historyManager.reset()
+        timerManager.reset()
     }
     fun resignGame()
     {
@@ -102,79 +90,13 @@ class Game
             gameState,
             playerOnTurn))
 
-        timerJob?.cancel()
+        timerManager.stopTimer()
 
         message = "RESIGNED!" + "   " + if(playerOnTurn == Player.WHITE)
                                              whoWon(Player.BLACK)
                                         else
                                              whoWon(Player.WHITE)
 
-    }
-
-    fun startTimer()
-    {
-        timerJob?.cancel()
-
-        timerJob = gameScope.launch()
-        {
-            while (isActive && gameState == GameState.PLAYING)
-            {
-                delay(1000L)
-
-                if (playerOnTurn == Player.WHITE)
-                {
-                    if (timeLeftWhite > 0)
-                    {
-                        timeLeftWhite--
-                    }
-                    else
-                    {
-                        message = "TIMEOUT!" + "   " + whoWon(Player.BLACK)
-                        gameState = GameState.TIMEOUT
-
-                        historyManager.addMoveToHistory(Move(
-                            -1,
-                            (-1 to -1),
-                            (-1 to -1),
-                            null,
-                            false,
-                            null,
-                            null,
-                            false,
-                            gameState,
-                            playerOnTurn))
-
-                        timerJob?.cancel()
-                    }
-                }
-                else
-                {
-                    if (timeLeftBlack > 0)
-                    {
-                        timeLeftBlack--
-                    }
-                    else
-                    {
-                        message = "TIMEOUT!" + "   " + whoWon(Player.WHITE)
-                        gameState = GameState.TIMEOUT
-
-                        historyManager.addMoveToHistory(Move(
-                            -1,
-                            (-1 to -1),
-                            (-1 to -1),
-                            null,
-                            false,
-                            null,
-                            null,
-                            false,
-                            gameState,
-                            playerOnTurn))
-
-                        timerJob?.cancel()
-                    }
-                }
-            }
-        }
     }
 
     fun onSquareClick(row: Int, col: Int)
@@ -224,8 +146,8 @@ class Game
                     return
                 }
 
-                lastBoardState = calculateBoardStateHash()
-                boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
+                lastBoardStateHash = calculateBoardStateHash()
+                boardStateHashHistory[lastBoardStateHash!!] = (boardStateHashHistory[lastBoardStateHash] ?: 0) + 1
 
                 evaluateCheck(playerOnTurn)
                 evaluateEndConditions(playerOnTurn)
@@ -449,8 +371,8 @@ class Game
         val updated = last.copy(promotion = pieceType)
         historyManager.addMoveToHistory(updated)
 
-        lastBoardState = calculateBoardStateHash()
-        boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
+        lastBoardStateHash = calculateBoardStateHash()
+        boardStateHashHistory[lastBoardStateHash!!] = (boardStateHashHistory[lastBoardStateHash] ?: 0) + 1
 
         evaluateCheck(pendingPromotionPlayer!!)
         evaluateEndConditions(pendingPromotionPlayer!!)
@@ -519,7 +441,7 @@ class Game
     fun evaluateEndConditions(player: Player)
     {
         val checkValidator = CheckValidator(board)
-        val drawValidator = DrawValidator(board,lastBoardState!!,boardStateHistory,fiftyMoveCounter)
+        val drawValidator = DrawValidator(board,lastBoardStateHash!!,boardStateHashHistory,fiftyMoveCounter)
 
         if (checkValidator.isOpponentCheckmatedByPlayer(player))
         {
@@ -556,7 +478,7 @@ class Game
                 gameState,
                 playerOnTurn))
 
-            timerJob?.cancel()
+            timerManager.stopTimer()
         }
     }
 
