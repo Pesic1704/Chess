@@ -1,8 +1,6 @@
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import kotlin.collections.plus
-import kotlin.math.abs
 
 class Game
 {
@@ -15,7 +13,7 @@ class Game
     var checkState by mutableStateOf(CheckState(false, null))
 
     var selectedStartSquare by mutableStateOf<Pair<Int, Int>?>(null)
-    private var isEndSquareSelected by mutableStateOf(false)
+    var isEndSquareSelected by mutableStateOf(false)
 
     var moveOptions by mutableStateOf(MoveOptions(emptyList(), emptyList()))
     var capturedPieces by mutableStateOf(listOf<ChessPiece>())
@@ -23,12 +21,13 @@ class Game
     var promotionSquare by mutableStateOf<Pair<Int, Int>?>(null)
     var pendingPromotionPlayer by mutableStateOf<Player?>(null)
 
-    private var lastBoardStateHash: Long? = null
-    private val boardStateHashHistory = mutableMapOf<Long,Int>()
-    private var fiftyMoveCounter:Int = 0
+    var lastBoardStateHash: Long? = null
+    val boardStateHashHistory = mutableMapOf<Long,Int>()
+    var fiftyMoveCounter:Int = 0
 
     val historyManager = HistoryManager(this)
     val timerManager = TimerManager(this)
+    val moveExecutor = MoveExecutor(this)
 
     fun init()
     {
@@ -113,21 +112,21 @@ class Game
 
                 val tempBoard = board.clone()
 
-                if (movingPiece.type == Piece.KING && abs(fromCol - toCol) == 2)
+                if (moveExecutor.checkCastlingConditions(movingPiece,fromCol,toCol))
                 {
-                    executeCastling(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
+                    moveExecutor.executeCastling(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
                 }
-                else if(movingPiece.type == Piece.PAWN && (toRow to toCol) == tempBoard.enPassantTarget)
+                else if(moveExecutor.checkEnPassantConditions(movingPiece,toRow,toCol,tempBoard))
                 {
-                    executeEnPassant(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
+                    moveExecutor.executeEnPassant(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
                 }
                 else
                 {
-                    executeNormalMove(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
+                    moveExecutor.executeNormalMove(tempBoard,movingPiece,fromRow,fromCol,toRow,toCol)
                 }
 
-                updateCastlingRights(tempBoard,fromRow,fromCol,toRow,toCol)
-                updateEnPassantTarget(tempBoard,movingPiece,fromRow,toRow,toCol)
+                moveExecutor.updateCastlingRights(tempBoard,fromRow,fromCol,toRow,toCol)
+                moveExecutor.updateEnPassantTarget(tempBoard,movingPiece,fromRow,toRow,toCol)
 
                 board = tempBoard
                 historyManager.addBoardToSnapshots(board.clone())
@@ -178,169 +177,6 @@ class Game
 
             val validator= MoveValidator(board)
             moveOptions=validator.getLegalMoves(row, col)
-        }
-    }
-
-    fun executeCastling(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
-    {
-        board.grid[fromRow][fromCol] = null
-        board.grid[toRow][toCol] = movingPiece
-
-        if (toCol < fromCol)
-        {
-            board.grid[fromRow][toCol + 1] = board.grid[fromRow][0]
-            board.grid[fromRow][0] = null
-
-            historyManager.addMoveToHistory(Move(
-                historyManager.getMovesCounter(),
-                (fromRow to fromCol),
-                (toRow to toCol),
-                movingPiece,
-                false,
-                null,
-                MoveType.CASTLE_QUEENS_SIDE,
-                false,
-                GameState.PLAYING,
-                playerOnTurn))
-        }
-        else
-        {
-            board.grid[fromRow][toCol - 1] = board.grid[fromRow][7]
-            board.grid[fromRow][7] = null
-
-            historyManager.addMoveToHistory(Move(
-                historyManager.getMovesCounter(),
-                (fromRow to fromCol),
-                (toRow to toCol),
-                movingPiece,
-                false,
-                null,
-                MoveType.CASTLE_KINGS_SIDE,
-                false,
-                GameState.PLAYING,
-                playerOnTurn))
-        }
-
-        fiftyMoveCounter++
-    }
-    fun executeEnPassant(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
-    {
-        val capturedPiece = board.grid[fromRow][toCol]!!
-        capturedPieces += capturedPiece
-
-        board.grid[toRow][toCol] = movingPiece
-        board.grid[fromRow][fromCol] = null
-        board.grid[fromRow][toCol] = null
-
-        historyManager.addMoveToHistory(Move(
-            historyManager.getMovesCounter(),
-            (fromRow to fromCol),
-            (toRow to toCol),
-            movingPiece,
-            true,
-            null,
-            MoveType.EN_PASSANT,
-            false,
-            GameState.PLAYING,
-            playerOnTurn))
-
-        fiftyMoveCounter = 0
-    }
-    fun executeNormalMove(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
-    {
-        val capturedPiece = board.grid[toRow][toCol]
-
-        if (capturedPiece != null)
-        {
-            capturedPieces += capturedPiece
-            fiftyMoveCounter = 0
-
-            historyManager.addMoveToHistory(Move(
-                historyManager.getMovesCounter(),
-                (fromRow to fromCol),
-                (toRow to toCol),
-                movingPiece,
-                true,
-                null,
-                MoveType.NORMAL,
-                false,
-                GameState.PLAYING,
-                playerOnTurn))
-        }
-        else
-        {
-            if (movingPiece.type == Piece.PAWN)
-            {
-                fiftyMoveCounter = 0
-            }
-            else
-            {
-                fiftyMoveCounter++
-            }
-
-            historyManager.addMoveToHistory(Move(
-                historyManager.getMovesCounter(),
-                (fromRow to fromCol),
-                (toRow to toCol),
-                movingPiece,
-                false,
-                null,
-                MoveType.NORMAL,
-                false,
-                GameState.PLAYING,
-                playerOnTurn)
-            )
-        }
-
-
-        board.grid[toRow][toCol] = movingPiece
-        board.grid[fromRow][fromCol] = null
-    }
-
-    fun updateCastlingRights(board: Board, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
-    {
-        if (fromRow == CastlingSquare.WHITE_KING.row && fromCol == CastlingSquare.WHITE_KING.col)
-        {
-            board.castlingRights.whiteKingSide = false
-            board.castlingRights.whiteQueenSide = false
-        }
-        if (fromRow == CastlingSquare.BLACK_KING.row && fromCol == CastlingSquare.BLACK_KING.col)
-        {
-            board.castlingRights.blackKingSide = false
-            board.castlingRights.blackQueenSide = false
-        }
-
-        if ((fromRow == CastlingSquare.WHITE_KING_ROOK.row && fromCol == CastlingSquare.WHITE_KING_ROOK.col) ||
-            (toRow == CastlingSquare.WHITE_KING_ROOK.row && toCol == CastlingSquare.WHITE_KING_ROOK.col))
-        {
-            board.castlingRights.whiteKingSide = false
-        }
-        if ((fromRow == CastlingSquare.WHITE_QUEEN_ROOK.row && fromCol == CastlingSquare.WHITE_QUEEN_ROOK.col) ||
-            (toRow == CastlingSquare.WHITE_QUEEN_ROOK.row && toCol == CastlingSquare.WHITE_QUEEN_ROOK.col))
-        {
-            board.castlingRights.whiteQueenSide = false
-        }
-
-        if ((fromRow == CastlingSquare.BLACK_KING_ROOK.row && fromCol == CastlingSquare.BLACK_KING_ROOK.col) ||
-            (toRow == CastlingSquare.BLACK_KING_ROOK.row && toCol == CastlingSquare.BLACK_KING_ROOK.col))
-        {
-            board.castlingRights.blackKingSide = false
-        }
-        if ((fromRow == CastlingSquare.BLACK_QUEEN_ROOK.row && fromCol == CastlingSquare.BLACK_QUEEN_ROOK.col) ||
-            (toRow == CastlingSquare.BLACK_QUEEN_ROOK.row && toCol == CastlingSquare.BLACK_QUEEN_ROOK.col))
-        {
-            board.castlingRights.blackQueenSide = false
-        }
-    }
-    fun updateEnPassantTarget(board: Board, movingPiece: ChessPiece, fromRow: Int, toRow: Int, toCol: Int)
-    {
-        if(movingPiece.type == Piece.PAWN && abs(toRow - fromRow) == 2)
-        {
-            board.enPassantTarget=((fromRow + toRow)/2) to toCol
-        }
-        else
-        {
-            board.enPassantTarget= null
         }
     }
 
