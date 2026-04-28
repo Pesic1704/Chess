@@ -33,7 +33,7 @@ fun App(game: Game)
 {
     LaunchedEffect(Unit)
     {
-        game.startTimer()
+        game.timerManager.startTimer()
     }
 
     val hScroll = rememberScrollState()
@@ -303,8 +303,8 @@ fun topBarItems(game: Game)
 
         timerBox(
             label = "White",
-            minutes = game.timeLeftWhite / 60,
-            seconds = game.timeLeftWhite % 60,
+            minutes = game.timerManager.timeLeftWhite / 60,
+            seconds = game.timerManager.timeLeftWhite % 60,
             background = Color.DarkGray,
             textColor = Color.White
         )
@@ -317,8 +317,8 @@ fun topBarItems(game: Game)
 
         timerBox(
             label = "Black",
-            minutes = game.timeLeftBlack / 60,
-            seconds = game.timeLeftBlack % 60,
+            minutes = game.timerManager.timeLeftBlack / 60,
+            seconds = game.timerManager.timeLeftBlack % 60,
             background = Color(0xFFB58863),
             textColor = Color.White
         )
