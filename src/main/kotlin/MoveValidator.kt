@@ -18,7 +18,7 @@ class MoveValidator(private val board: Board)
 
             if(type == MoveType.NORMAL)
             {
-                val tempBoard = board.copy()
+                val tempBoard = board.clone()
 
                 tempBoard.grid[toRow][toCol] = piece
                 tempBoard.grid[row][col] = null
@@ -33,7 +33,7 @@ class MoveValidator(private val board: Board)
             {
                 for(tempCol in 2 .. 4)
                 {
-                    val tempBoard = board.copy()
+                    val tempBoard = board.clone()
 
                     tempBoard.grid[toRow][tempCol] = piece
                     tempBoard.grid[row][col] = if(col == tempCol) piece else null
@@ -50,7 +50,7 @@ class MoveValidator(private val board: Board)
             {
                 for(tempCol in 4 .. 6)
                 {
-                    val tempBoard = board.copy()
+                    val tempBoard = board.clone()
 
                     tempBoard.grid[toRow][tempCol] = piece
                     tempBoard.grid[row][col] = if(col == tempCol) piece else null
@@ -65,7 +65,7 @@ class MoveValidator(private val board: Board)
             }
             else if (type == MoveType.EN_PASSANT)
             {
-                val tempBoard = board.copy()
+                val tempBoard = board.clone()
 
                 tempBoard.grid[toRow][toCol] = piece
                 tempBoard.grid[row][col] = null

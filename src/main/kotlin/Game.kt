@@ -203,7 +203,7 @@ class Game
 
                 val movingPiece = board.grid[fromRow][fromCol] ?:return
 
-                val tempBoard = board.copy()
+                val tempBoard = board.clone()
 
                 if (movingPiece.type == Piece.KING && abs(fromCol - toCol) == 2)
                 {
@@ -222,7 +222,7 @@ class Game
                 updateEnPassantTarget(tempBoard,movingPiece,fromRow,toRow,toCol)
 
                 board = tempBoard
-                boardSnapshots.add(board.copy())
+                boardSnapshots.add(board.clone())
 
                 if (checkPromotionConditions(movingPiece,toRow))
                 {
@@ -445,12 +445,12 @@ class Game
     {
         val (row, col) = promotionSquare!!
 
-        val tempBoard = board.copy()
+        val tempBoard = board.clone()
         tempBoard.grid[row][col]= ChessPiece(pieceType, pendingPromotionPlayer!!)
         board = tempBoard
 
         boardSnapshots.removeAt(boardSnapshots.lastIndex)
-        boardSnapshots.add(board.copy())
+        boardSnapshots.add(board.clone())
 
         val last = movesHistory.removeAt(movesHistory.lastIndex)
         val updated = last.copy(promotion = pieceType)
@@ -680,7 +680,7 @@ class Game
         {
             if (index in boardSnapshots.indices)
             {
-                board = boardSnapshots[index].copy()
+                board = boardSnapshots[index].clone()
             }
         }
     }

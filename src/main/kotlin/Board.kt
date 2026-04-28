@@ -52,7 +52,7 @@ class Board
         enPassantTarget = null
     }
 
-    fun copy(): Board
+    fun clone(): Board
     {
         val newBoard = Board()
 
