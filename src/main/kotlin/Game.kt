@@ -1,6 +1,7 @@
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
 import kotlin.collections.plus
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +40,9 @@ class Game
     private var lastBoardState: Long? = null
     private val boardStateHistory = mutableMapOf<Long,Int>()
     private var fiftyMoveCounter:Int = 0
+
+    var moveIndex:Int = 0
+    val movesHistory = mutableStateListOf<Move>()
 
     fun init()
     {
@@ -79,10 +83,25 @@ class Game
         boardStateHistory.clear()
         lastBoardState = null
         fiftyMoveCounter = 0
+
+        moveIndex = 0
+        movesHistory.clear()
     }
     fun resignGame()
     {
         gameState = GameState.RESIGNED
+
+        movesHistory.add(Move(
+            moveIndex,
+            (-1 to -1),
+            (-1 to -1),
+            null,
+            false,
+            null,
+            null,
+            false,
+            gameState,
+            playerOnTurn))
 
         timerJob?.cancel()
 
@@ -113,6 +132,19 @@ class Game
                     {
                         message = "TIMEOUT!" + "   " + whoWon(Player.BLACK)
                         gameState = GameState.TIMEOUT
+
+                        movesHistory.add(Move(
+                            moveIndex,
+                            (-1 to -1),
+                            (-1 to -1),
+                            null,
+                            false,
+                            null,
+                            null,
+                            false,
+                            gameState,
+                            playerOnTurn))
+
                         timerJob?.cancel()
                     }
                 }
@@ -126,6 +158,19 @@ class Game
                     {
                         message = "TIMEOUT!" + "   " + whoWon(Player.WHITE)
                         gameState = GameState.TIMEOUT
+
+                        movesHistory.add(Move(
+                            moveIndex,
+                            (-1 to -1),
+                            (-1 to -1),
+                            null,
+                            false,
+                            null,
+                            null,
+                            false,
+                            gameState,
+                            playerOnTurn))
+
                         timerJob?.cancel()
                     }
                 }
@@ -148,9 +193,9 @@ class Game
 
             if (toRow to toCol in legalMoves)
             {
-                val movingPiece = board.grid[fromRow][fromCol] ?:return
+                moveIndex++
 
-                //TODO history
+                val movingPiece = board.grid[fromRow][fromCol] ?:return
 
                 val tempBoard = board.copy()
 
@@ -230,11 +275,35 @@ class Game
         {
             board.grid[fromRow][toCol + 1] = board.grid[fromRow][0]
             board.grid[fromRow][0] = null
+
+            movesHistory.add(Move(
+                moveIndex,
+                (fromRow to fromCol),
+                (toRow to toCol),
+                movingPiece,
+                false,
+                null,
+                MoveType.CASTLE_QUEENS_SIDE,
+                false,
+                GameState.PLAYING,
+                playerOnTurn))
         }
         else
         {
             board.grid[fromRow][toCol - 1] = board.grid[fromRow][7]
             board.grid[fromRow][7] = null
+
+            movesHistory.add(Move(
+                moveIndex,
+                (fromRow to fromCol),
+                (toRow to toCol),
+                movingPiece,
+                false,
+                null,
+                MoveType.CASTLE_KINGS_SIDE,
+                false,
+                GameState.PLAYING,
+                playerOnTurn))
         }
 
         fiftyMoveCounter++
@@ -248,6 +317,18 @@ class Game
         board.grid[fromRow][fromCol] = null
         board.grid[fromRow][toCol] = null
 
+        movesHistory.add(Move(
+            moveIndex,
+            (fromRow to fromCol),
+            (toRow to toCol),
+            movingPiece,
+            true,
+            null,
+            MoveType.EN_PASSANT,
+            false,
+            GameState.PLAYING,
+            playerOnTurn))
+
         fiftyMoveCounter = 0
     }
     fun executeNormalMove(board: Board, movingPiece: ChessPiece, fromRow: Int, fromCol: Int, toRow: Int, toCol: Int)
@@ -258,15 +339,44 @@ class Game
         {
             capturedPieces += capturedPiece
             fiftyMoveCounter = 0
-        }
-        else if (movingPiece.type == Piece.PAWN)
-        {
-            fiftyMoveCounter = 0
+
+            movesHistory.add(Move(
+                moveIndex,
+                (fromRow to fromCol),
+                (toRow to toCol),
+                movingPiece,
+                true,
+                null,
+                MoveType.NORMAL,
+                false,
+                GameState.PLAYING,
+                playerOnTurn))
         }
         else
         {
-            fiftyMoveCounter++
+            if (movingPiece.type == Piece.PAWN)
+            {
+                fiftyMoveCounter = 0
+            }
+            else
+            {
+                fiftyMoveCounter++
+            }
+
+            movesHistory.add(Move(
+                moveIndex,
+                (fromRow to fromCol),
+                (toRow to toCol),
+                movingPiece,
+                false,
+                null,
+                MoveType.NORMAL,
+                false,
+                GameState.PLAYING,
+                playerOnTurn)
+            )
         }
+
 
         board.grid[toRow][toCol] = movingPiece
         board.grid[fromRow][fromCol] = null
@@ -332,6 +442,10 @@ class Game
         tempBoard.grid[row][col]= ChessPiece(pieceType, pendingPromotionPlayer!!)
         board = tempBoard
 
+        val last = movesHistory.removeAt(movesHistory.lastIndex)
+        val updated = last.copy(promotion = pieceType)
+        movesHistory.add(updated)
+
         lastBoardState = calculateBoardStateHash()
         boardStateHistory[lastBoardState!!] = (boardStateHistory[lastBoardState] ?: 0) + 1
 
@@ -389,6 +503,10 @@ class Game
         {
             val enemy = if (player == Player.WHITE) Player.BLACK else Player.WHITE
             checkState = CheckState(true, findKing(board, enemy))
+
+            val last = movesHistory.removeAt(movesHistory.lastIndex)
+            val updated = last.copy(check=true)
+            movesHistory.add(updated)
         }
         else
         {
@@ -423,6 +541,18 @@ class Game
 
         if(gameState != GameState.PLAYING)
         {
+            movesHistory.add(Move(
+                moveIndex,
+                (-1 to -1),
+                (-1 to -1),
+                null,
+                false,
+                null,
+                null,
+                false,
+                gameState,
+                playerOnTurn))
+
             timerJob?.cancel()
         }
     }
@@ -433,5 +563,88 @@ class Game
                             Player.BLACK
                         else
                             Player.WHITE
+    }
+
+    fun getMovesHistoryFormated() : List<String>
+    {
+        val res = mutableListOf<String>()
+
+        movesHistory.forEach{
+            var text = ""
+
+            if((it.end == GameState.CHECKMATE && it.player==Player.WHITE) ||
+                (it.end == GameState.RESIGNED && it.player==Player.BLACK) ||
+                (it.end == GameState.TIMEOUT && it.player==Player.BLACK))
+            {
+                text+= "1-0"
+            }
+            else if((it.end == GameState.CHECKMATE && it.player==Player.BLACK) ||
+                (it.end == GameState.RESIGNED && it.player==Player.WHITE) ||
+                (it.end == GameState.TIMEOUT && it.player==Player.WHITE))
+            {
+                text+= "0-1"
+            }
+            else if(it.end == GameState.CHECKMATE || it.end == GameState.DRAW)
+            {
+                text+= "1/2-1/2"
+            }
+            else
+            {
+                text+= it.index.toString() + ". "
+
+                if(it.type == MoveType.CASTLE_KINGS_SIDE)
+                {
+                    text +="O-O"
+                }
+                else if(it.type == MoveType.CASTLE_QUEENS_SIDE)
+                {
+                    text += "O-O-O"
+                }
+                else if(it.type == MoveType.EN_PASSANT ||
+                    (it.type == MoveType.NORMAL && it.capturedPiece && it.movingPiece!!.type == Piece.PAWN))
+                {
+                    text+= colToString(it.from.second) + "x" + colToString(it.to.second) + (8-it.to.first).toString()
+                }
+                else
+                {
+                    if(it.movingPiece!!.type == Piece.KNIGHT)
+                    {
+                        text += "N"
+                    }
+                    else if(it.movingPiece.type == Piece.BISHOP)
+                    {
+                        text += "B"
+                    }
+                    else if(it.movingPiece.type == Piece.ROOK)
+                    {
+                        text += "R"
+                    }
+                    else if(it.movingPiece.type == Piece.QUEEN)
+                    {
+                        text += "Q"
+                    }
+                    else if(it.movingPiece.type == Piece.KING)
+                    {
+                        text += "K"
+                    }
+
+                    if(it.capturedPiece && it.movingPiece.type != Piece.PAWN)
+                    {
+                        text += "x"
+                    }
+
+                    text+= colToString(it.to.second) + (8-it.to.first).toString()
+
+                }
+
+                if(it.check)
+                {
+                    text+= "+"
+                }
+            }
+
+            res.add(text)
+        }
+        return res
     }
 }

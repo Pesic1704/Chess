@@ -37,3 +37,8 @@ fun getPromotionPieces(): List<Piece>
 {
     return arrayListOf(Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN)
 }
+
+fun colToString(col: Int): String
+{
+    return ('a' + col).toString()
+}

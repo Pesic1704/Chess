@@ -67,3 +67,16 @@ enum class CastlingSquare(val row: Int, val col: Int)
     WHITE_KING_ROOK(7, 7),
     WHITE_KING(7, 4)
 }
+
+data class Move(
+    val index: Int,
+    val from: Pair<Int, Int>,
+    val to: Pair<Int, Int>,
+    val movingPiece: ChessPiece?,
+    val capturedPiece: Boolean,
+    val promotion: Piece?,
+    val type: MoveType?,
+    val check: Boolean,
+    val end: GameState,
+    val player: Player
+)

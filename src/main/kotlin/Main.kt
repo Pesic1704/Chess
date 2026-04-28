@@ -85,7 +85,9 @@ fun App(game: Game)
                         .weight(1f, fill = false)
                 )
                 {
-                    // TODO HISTORY
+                    game.getMovesHistoryFormated().forEach{
+                        Text(text = it, style = commonTextStyle)
+                    }
                 }
             }
 
