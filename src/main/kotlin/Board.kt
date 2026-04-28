@@ -4,12 +4,6 @@ class Board
     var castlingRights = CastlingRights(whiteKingSide=true, whiteQueenSide=true, blackKingSide = true, blackQueenSide = true)
     var enPassantTarget: Pair<Int, Int>? = null
 
-    fun get(row: Int, col: Int) = grid[row][col]
-    fun set(row: Int, col: Int, piece: ChessPiece?)
-    {
-        grid[row][col] = piece
-    }
-
     fun clearBoard()
     {
         for (row in 0..7)
