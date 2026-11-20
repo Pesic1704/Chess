@@ -1,76 +1,67 @@
-# Šah
+# Chess
 
-## O programu
+## About the Project
 
-Ovaj program predstavlja implementaciju klasične igre šaha. Podržava kompletna pravila igre, uključujući specijalne poteze kao što su rokada, en passant i promocija pešaka.
 
-Tok partije se beleži kroz istoriju poteza, a nakon završetka igre moguće je pregledati celu partiju kroz detaljan prikaz poteza. Implementiran je i sistem tajmera, uz mogućnost izbora različitih trajanja za partiju.
 
-Kada se program upali potrebno je izabrati trajanje partije. Nakon toga, figure se pomeraju klikom na polje sa kojeg se pomeraju, a zatim na jedno od dozvoljenih polja.
+This project is an implementation of the classic game of chess, developed as part of the Programming Paradigms course at the Faculty of Mathematics, University of Belgrade. 
 
-### Demonstracija partije
-https://github.com/matf-pp/2026_Sah/blob/main/docs/simple_game.gif
-### Demonstracija korišćenja istorije
-Na kraju partije moguće je pogledati kako je tabla izgledala u određenom trenutku partije klikom na potez sa leve strane:
+It supports all standard chess rules, including special moves such as castling, en passant, and pawn promotion.
 
-https://github.com/matf-pp/2026_Sah/blob/main/docs/move_history.gif
+The game records the entire move history, allowing players to review the completed game move by move. It also features a chess clock, with multiple time controls available.
 
-##  Korišćene tehnologije
+When launching the application, players first select the desired game duration. To make a move, simply click on the piece you want to move, followed by one of its legal destination squares.
 
-* Kotlin
-* Compose Multiplatform
-* Gradle build sistem
-* IntelliJ IDEA
+### Gameplay Demo
 
----
+![Gameplay Demo](https://github.com/Pesic1704/Chess/blob/main/docs/simple_game.gif)
 
-## Potrebni alati za pokretanje
+### Move History Demo
 
-* Java **21 (Temurin ili OpenJDK 21)**
-* Linux desktop okruženje
+After a game has ended, players can review previous board positions by selecting individual moves from the move history panel on the left.
+
+![Move History Demo](https://github.com/Pesic1704/Chess/blob/main/docs/move_history.gif)
 
 ---
 
-## Prevodjenje aplikacije iz izvornog koda 
+## Technologies Used
 
-1. Klonirati repozitorijum sledećom komandom:
+- Kotlin
+- Compose Multiplatform
+- Gradle
+- IntelliJ IDEA
+
+---
+
+## Prerequisites
+
+- Java 21 (Temurin or OpenJDK 21)
+- Linux desktop environment
+
+---
+
+## Building and Running from Source
+
+1. Clone the repository:
 
 ```bash
-git clone https://github.com/matf-pp/2026_Sah.git
-cd 2026_Sah
+git clone https://github.com/Pesic1704/Chess.git
+cd Chess
 ```
 
-2. U root direktorijumu projekta:
+2. From the project root directory, run:
 
 ```bash
 chmod +x gradlew
 ./gradlew clean run
 ```
 
-> Napomena: Ukoliko nije podešena ispravna verzija JDK-a, gradle će izbaciti grešku
-
-
-## Pokretanje isporučenog izvršnog programa
-
-1. Preuzeti Chess.zip fajl sa Releases taba
-2. Otpakovati arhivu.
-3. Pokrenuti program komandom: 
-
-```bash
-./Chess/bin/Chess
-```
+> **Note:** Make sure that JDK 21 is installed and configured correctly. Otherwise, Gradle may fail to build or run the application.
 
 ---
 
-## Operativni sistem
+## Authors
 
-* Izvršni fajl je preveden za Linux operativni sistem
-
----
-## Autori
-
-* Petar Pešić — email: [petar.pesic04@gmail.com](mailto:petar.pesic04@gmail.com)
-* Tadija Matić — email: [tadijamatic0807@gmail.com](mailto:tadijamatic0807@gmail.com)
-
----
+- **Petar Pešić** 
+- **Tadija Matić**  
 
